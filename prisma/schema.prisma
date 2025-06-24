@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  username           String?
+  email              String?   @unique
+  password           String?
+  emailVerified      DateTime? @map("email_verified")
+  profileComplete    Boolean   @default(false)
+  tempOtpSecret     String? // Segreto temporaneo per l'autenticazione a due fattori
+  twoFactorSecret    String? // Segreto per la 2FA
+  isTwoFactorEnabled Boolean   @default(false) // Indica se la 2FA è attivata
+    twoFactorPass      Boolean  @default(false)
+  role               Role      @default(USER)
+  accounts           Account[]
+  sessions           Session[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Token {
+  id        String    @id @default(cuid())
+  email     String
+  token     String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  type      TokenType
+
+  @@unique([email, token])
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  RESET_2FA
+}
