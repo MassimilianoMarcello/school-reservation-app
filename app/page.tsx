@@ -4,7 +4,7 @@
 export default function Home() {
   return (
   <>
-  <h1 className="bg-amber-300">Welcome to the Home Page</h1>
+  <h1 className="bg-amber-300">Welcome to the Ivy and Tim Learn Italian Website</h1>
 
   </>
   );
