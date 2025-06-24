@@ -23,14 +23,27 @@ model User {
   tempOtpSecret     String? // Segreto temporaneo per l'autenticazione a due fattori
   twoFactorSecret    String? // Segreto per la 2FA
   isTwoFactorEnabled Boolean   @default(false) // Indica se la 2FA è attivata
-    twoFactorPass      Boolean  @default(false)
+  twoFactorPass      Boolean  @default(false)
   role               Role      @default(USER)
+  
+  // Relazioni esistenti
   accounts           Account[]
   sessions           Session[]
+  
+  // Nuove relazioni per insegnanti
+  timeSlots          TimeSlot[]      
+  teacherBookings    Booking[]       @relation("TeacherBookings")
+  packages           LessonPackage[] @relation("TeacherPackages")
+  sales              Purchase[]      @relation("TeacherSales")
+  
+  // Nuove relazioni per studenti
+  studentBookings    Booking[]       @relation("StudentBookings")
+  purchases          Purchase[]      @relation("StudentPurchases")
 }
 
 enum Role {
-  USER
+  USER      // studenti
+  TEACHER   // insegnanti
   ADMIN
   MODERATOR
 }
@@ -84,4 +97,98 @@ enum TokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
   RESET_2FA
+}
+
+// === NUOVI MODELLI PER IL SISTEMA DI LEZIONI ===
+
+// Pacchetti che l'insegnante mette in vendita
+model LessonPackage {
+  id          Int     @id @default(autoincrement())
+  teacherId   String
+  teacher     User    @relation("TeacherPackages", fields: [teacherId], references: [id])
+  
+  name        String  // "5 Lezioni Standard", "Lezione di Prova"
+  description String?
+  lessonCount Int     // quante lezioni include (1 per singola, 5 per pacchetto)
+  duration    Int     // durata di ogni lezione in minuti (30, 60, etc.)
+  price       Decimal // prezzo totale del pacchetto
+  isActive    Boolean @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  purchases   Purchase[]
+}
+
+// Acquisti effettuati dagli studenti
+model Purchase {
+  id               Int           @id @default(autoincrement())
+  studentId        String
+  teacherId        String
+  packageId        Int
+  
+  student          User          @relation("StudentPurchases", fields: [studentId], references: [id])
+  teacher          User          @relation("TeacherSales", fields: [teacherId], references: [id])
+  package          LessonPackage @relation(fields: [packageId], references: [id])
+  
+  totalLessons     Int           // lezioni totali acquistate
+  usedLessons      Int           @default(0) // lezioni già prenotate/usate
+  remainingLessons Int           // lezioni rimanenti da utilizzare
+  
+  purchaseDate     DateTime      @default(now())
+  expiryDate       DateTime?     // scadenza del pacchetto (opzionale)
+  
+  bookings         Booking[]
+  
+  @@index([studentId, teacherId])
+}
+
+// Slot temporali disponibili creati dall'insegnante
+model TimeSlot {
+  id        Int      @id @default(autoincrement())
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id])
+  
+  date      DateTime // data dello slot (es. 2025-06-22)
+  startTime String   // orario inizio (es. "10:00")
+  endTime   String   // orario fine (es. "11:00")
+  duration  Int      // durata in minuti di questo slot
+  isActive  Boolean  @default(true) // per disabilitare senza cancellare
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings  Booking[]
+  
+  @@unique([teacherId, date, startTime, endTime])
+  @@index([teacherId, date])
+}
+
+// Prenotazioni: collegano Purchase + TimeSlot
+model Booking {
+  id         Int      @id @default(autoincrement())
+  studentId  String
+  teacherId  String
+  timeSlotId Int      @unique
+  purchaseId Int      // quale acquisto sta "consumando"
+  
+  status     BookingStatus @default(CONFIRMED)
+  notes      String?       // note dello studente
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  
+  timeSlot   TimeSlot @relation(fields: [timeSlotId], references: [id])
+  student    User     @relation("StudentBookings", fields: [studentId], references: [id])
+  teacher    User     @relation("TeacherBookings", fields: [teacherId], references: [id])
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  
+  @@index([studentId])
+  @@index([teacherId])
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
 }

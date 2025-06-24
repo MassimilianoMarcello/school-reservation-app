@@ -76,23 +76,12 @@ const LoginForm = () => {
       return;
     }
 
-    // const updatedSession = await fetch("/api/auth/session").then((res) =>
-    //   res.json()
-    // );
 
-    // if (updatedSession?.user?.isTwoFactorEnabled) {
-    //   setRequires2FA(true);
-    //   router.push("/2fa");
-    //   setIsLoading(false);
-    //   return;
-    // }
 
     router.push("/user/dashboard");
   };
 
-  // if (session?.user?.isTwoFactorEnabled && !session?.user?.twoFactorPass) {
-  //   return <OtpForm />;
-  // }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-md p-6 space-y-6">
