@@ -63,6 +63,9 @@ const TopNavbar = () => {
             <Button asChild variant="outline">
               <Link href="/user/dashboard">Dashboard</Link>
             </Button>
+             <Button asChild variant="outline">
+              <Link href="/teacher/dashboard">Teacher Dashboard</Link>
+            </Button>
             <LogoutButton />
           </>
          )} 

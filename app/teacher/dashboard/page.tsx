@@ -1,6 +1,7 @@
 import React from 'react'
+import TeacherDashboard from "@/components/Teacher/teacherDashboard";
 
-const TeacherDashboard = () => {
+const TeacherDashboardPage = () => {
   return (
     <div>
         <TeacherDashboard />
@@ -8,4 +9,4 @@ const TeacherDashboard = () => {
   )
 }
 
-export default TeacherDashboard
+export default TeacherDashboardPage
