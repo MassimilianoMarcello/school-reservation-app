@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 // import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { resetPassword } from "@/app/actions/resetPasswordAction";
+import { resetPassword } from "@/app/actions/authActions/resetPasswordAction";
 // import router from "next/router";
 
 import clsx from "clsx";

@@ -35,7 +35,7 @@ const config: NextAuthConfig = {
 
         const { email, password } = parsed.data;
         const user = await findUserByEmail(email);
-        if (!user || !user.password || !user.emailVerified) return null;
+        if (!user || !user.password || !user.emailVerified || !user.email) return null;
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return null;
@@ -43,6 +43,7 @@ const config: NextAuthConfig = {
         return {
           id: user.id,
           email: user.email,
+          username: user.username ?? undefined,
           role: user.role ?? "USER",
           isTwoFactorEnabled: user.isTwoFactorEnabled ?? false,
           twoFactorPass: user.twoFactorPass ?? false,
@@ -62,6 +63,7 @@ const config: NextAuthConfig = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+             token.username = user.username; 
         token.role = user.role ?? "USER";
         token.isOAuthUser = account?.provider !== "credentials";
       }
@@ -72,6 +74,7 @@ const config: NextAuthConfig = {
       if (session.user && token) {
         session.user.id = token.id;
         session.user.email = token.email;
+          session.user.username = token.username; 
         session.user.role = token.role;
         session.user.isOAuthUser = token.isOAuthUser;
       }

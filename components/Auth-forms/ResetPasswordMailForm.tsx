@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import TopFormHeader from "./TopFormHeader";
 import { CheckCircle, KeyRound, Loader2 } from "lucide-react";
-import { resetPassword } from "@/app/actions/resetPasswordSendMail";
+import { resetPassword } from "@/app/actions/authActions/resetPasswordSendMail";
 
 const ResetMailForm = () => {
   const [emailSent, setEmailSent] = useState(false);

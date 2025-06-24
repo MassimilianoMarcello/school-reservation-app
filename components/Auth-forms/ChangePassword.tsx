@@ -35,7 +35,7 @@ import Link from "next/link";
 
 
 import clsx from "clsx";
-import { changePassword } from "@/app/actions/changePasswords";
+import { changePassword } from "@/app/actions/authActions/changePasswords";
 import { redirect } from "next/navigation";
 
 const  ChangePasswordsForm =  () => {

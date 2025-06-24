@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resendVerificationEmail } from "@/app/actions/resendeVerificationMail"; // Server action corretta
+import { resendVerificationEmail } from "@/app/actions/authActions/resendeVerificationMail"; // Server action corretta
 import { Input } from "@/components/ui/input"; // Se usi shadcn/ui
 import { Button } from "@/components/ui/button";
 

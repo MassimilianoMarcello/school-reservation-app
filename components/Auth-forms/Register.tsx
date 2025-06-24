@@ -20,7 +20,7 @@ import TopFormHeader from "./TopFormHeader";
 import {Circle, CircleUserRound, Eye, EyeOff, CheckCircle, MailCheck } from "lucide-react"; // Aggiungi le icone Eye e EyeOff
 import Link from "next/link";
 import clsx from "clsx";
-import { registerUser } from "@/app/actions/register";
+import { registerUser } from "@/app/actions/authActions/register";
 
 import { signIn } from "next-auth/react";
 

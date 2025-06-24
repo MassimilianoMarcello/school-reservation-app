@@ -22,7 +22,7 @@ import { KeyRound, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 import { useRouter } from "next/navigation";
-import { login } from "@/app/actions/login";
+import { login } from "@/app/actions/authActions/login";
 import { signIn } from "next-auth/react";
 // import { OtpForm } from "./OtpFormLogin";
 

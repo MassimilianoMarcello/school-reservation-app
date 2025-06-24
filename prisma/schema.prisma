@@ -18,6 +18,7 @@ model User {
   username           String?
   email              String?   @unique
   password           String?
+   image              String?
   emailVerified      DateTime? @map("email_verified")
   profileComplete    Boolean   @default(false)
   tempOtpSecret     String? // Segreto temporaneo per l'autenticazione a due fattori

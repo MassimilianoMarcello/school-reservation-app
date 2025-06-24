@@ -106,3 +106,50 @@ export type ChangePasswordSchemaTypes = z.infer<typeof changePasswordSchema>;
       .regex(/^\d+$/, 'Otp must contain only numbers'),
   });
   export type OtpSchemaType = z.infer<typeof otpSchema>;
+
+
+  // teacher schemas
+
+
+
+
+
+// Schema per i pacchetti lezioni
+export const lessonPackageSchema = z.object({
+  name: z
+    .string()
+    .min(1, "The name is required")
+    .max(100, "The name must be at most 100 characters"),
+  
+  description: z
+    .string()
+    .max(500, "The description must be at most 500 characters")
+    .optional(),
+  
+  lessonCount: z
+    .number({
+      required_error: "The lesson count is required",
+      invalid_type_error: "The lesson count must be a number"
+    })
+    .min(1, "The package must contain at least 1 lesson")
+    .max(50, "The package can contain at most 50 lessons"),
+
+  duration: z
+    .number({
+      required_error: "The duration is required",
+      invalid_type_error: "The duration must be a number"
+    })
+    .min(15, "The minimum duration is 15 minutes")
+    .max(300, "The maximum duration is 300 minutes"),
+
+  price: z
+    .number({
+      required_error: "The price is required",
+      invalid_type_error: "The price must be a number"
+    })
+    .min(0.01, "The price must be greater than 0")
+    .max(1000, "The maximum price is 1000€"),
+});
+
+// Tipo inferito dallo schema
+export type LessonPackageInput = z.infer<typeof lessonPackageSchema>;

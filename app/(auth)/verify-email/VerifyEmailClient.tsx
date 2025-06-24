@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { verificationEmail } from "@/app/actions/verificationEmail";
+import { verificationEmail } from "@/app/actions/authActions/verificationEmail";
 import TopFormHeader from "@/components/Auth-forms/TopFormHeader";
 import { Loader } from "@/components/Auth-forms/Loader";
 import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
