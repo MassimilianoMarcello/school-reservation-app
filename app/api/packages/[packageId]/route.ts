@@ -3,19 +3,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-// ✅ DELETE
+// ✅ In Next.js 15, params è asincrono
+type RouteContext = {
+  params: Promise<{
+    packageId: string;
+  }>;
+};
+
+// ✅ DELETE con params asincrono
 export async function DELETE(
   request: NextRequest,
-  context: { params: { packageId: string } }
+  context: RouteContext
 ) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
-    const { packageId } = context.params;
+    // ⚠️ IMPORTANTE: await params in Next.js 15
+    const { packageId } = await context.params;
     const parsedId = parseInt(packageId);
 
     if (isNaN(parsedId)) {
@@ -47,26 +54,25 @@ export async function DELETE(
     await prisma.lessonPackage.delete({ where: { id: parsedId } });
 
     return NextResponse.json({ message: "Pacchetto eliminato" }, { status: 200 });
-
   } catch (error) {
     console.error("Errore DELETE:", error);
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });
   }
 }
 
-// ✅ PATCH
+// ✅ PATCH con params asincrono
 export async function PATCH(
   request: NextRequest,
-  context: { params: { packageId: string } }
+  context: RouteContext
 ) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
     }
 
-    const { packageId } = context.params;
+    // ⚠️ IMPORTANTE: await params in Next.js 15
+    const { packageId } = await context.params;
     const parsedId = parseInt(packageId);
     const body = await request.json();
 
@@ -94,9 +100,9 @@ export async function PATCH(
     });
 
     return NextResponse.json(updatedPackage, { status: 200 });
-
   } catch (error) {
     console.error("Errore PATCH:", error);
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });
   }
 }
+
