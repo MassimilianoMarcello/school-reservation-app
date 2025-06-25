@@ -197,12 +197,12 @@ export function TeacherPackagesClient({ teacher, isOwner = false }: TeacherPacka
           </h2>
           {isOwner && teacher.packages.length > 0 && (
             <Button
-              onClick={() => router.push(`/teacher/packages/new`)}
+              onClick={() => router.push(`/teacher/createPackageLessons`)}
               variant="outline"
               className="gap-2"
             >
               <Plus className="w-4 h-4" />
-              Aggiungi Pacchetto
+              Create a new Package
             </Button>
           )}
         </div>
@@ -212,18 +212,18 @@ export function TeacherPackagesClient({ teacher, isOwner = false }: TeacherPacka
             <CardContent>
               <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Nessun pacchetto disponibile
+                No Packages Available
               </h3>
               <p className="text-gray-600 mb-6">
-                {isOwner 
-                  ? "Crea il tuo primo pacchetto di lezioni per iniziare a vendere."
-                  : "Questo insegnante non ha ancora creato pacchetti di lezioni."
+                {isOwner
+                  ? "Create your first lesson package to start selling."
+                  : "This teacher has not created any lesson packages yet."
                 }
               </p>
               {isOwner && (
                 <Button onClick={() => router.push(`/teacher/packages/new`)} className="gap-2">
                   <Plus className="w-4 h-4" />
-                  Crea Primo Pacchetto
+                  Create First Package
                 </Button>
               )}
             </CardContent>

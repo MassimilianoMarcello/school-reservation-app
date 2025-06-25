@@ -141,3 +141,146 @@ export async function getTeacherPackages(teacherId?: string) {
     return { success: false, error: "Errore interno del server" };
   }
 }
+
+
+
+// Aggiungi queste funzioni al tuo file teacherActions/createPackagesActions.ts
+
+// Schema per l'update (stesso del create ma con id)
+const updatePackageSchema = lessonPackageSchema.extend({
+  id: z.number(),
+  teacherId: z.string().min(1),
+});
+
+type UpdatePackageInput = z.infer<typeof updatePackageSchema>;
+
+// Funzione per ottenere un singolo pacchetto (per pre-popolare il form)
+export async function getPackageById(packageId: number) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Non autenticato" };
+    }
+
+    if (session.user.role !== "TEACHER") {
+      return { success: false, error: "Non autorizzato" };
+    }
+
+    const lessonPackage = await prisma.lessonPackage.findUnique({
+      where: { 
+        id: packageId,
+        teacherId: session.user.id, // Solo i propri pacchetti
+      },
+    });
+
+    if (!lessonPackage) {
+      return { success: false, error: "Pacchetto non trovato" };
+    }
+
+    // Serializza per il client
+    const serializedPackage = {
+      ...lessonPackage,
+      price: lessonPackage.price.toNumber(),
+      createdAt: lessonPackage.createdAt.toISOString(),
+      updatedAt: lessonPackage.updatedAt.toISOString(),
+    };
+
+    return { success: true, data: serializedPackage };
+
+  } catch (error) {
+    console.error("Errore nel recupero del pacchetto:", error);
+    return { success: false, error: "Errore interno del server" };
+  }
+}
+
+// Funzione per aggiornare il pacchetto
+export async function updateLessonPackage(data: UpdatePackageInput) {
+  try {
+    // Verifica l'autenticazione
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Non autenticato" };
+    }
+
+    // Verifica che l'utente sia un teacher e che stia modificando un suo pacchetto
+    if (session.user.role !== "TEACHER" || session.user.id !== data.teacherId) {
+      return { success: false, error: "Non autorizzato" };
+    }
+
+    // Valida i dati
+    const validatedData = updatePackageSchema.parse(data);
+
+    // Verifica che il pacchetto esista e appartenga al teacher
+    const existingPackage = await prisma.lessonPackage.findUnique({
+      where: { id: validatedData.id },
+      include: {
+        _count: {
+          select: {
+            purchases: true,
+          },
+        },
+      },
+    });
+
+    if (!existingPackage) {
+      return { success: false, error: "Pacchetto non trovato" };
+    }
+
+    if (existingPackage.teacherId !== validatedData.teacherId) {
+      return { success: false, error: "Non autorizzato a modificare questo pacchetto" };
+    }
+
+    // Controllo opzionale: se il pacchetto ha già acquisti, limita le modifiche
+    if (existingPackage._count.purchases > 0) {
+      // Potresti voler limitare le modifiche se ci sono già acquisti
+      // Ad esempio, non permettere di cambiare lessonCount o duration
+      // Ma per ora permettiamo tutto
+    }
+
+    // Aggiorna il pacchetto
+    const updatedPackage = await prisma.lessonPackage.update({
+      where: { id: validatedData.id },
+      data: {
+        name: validatedData.name,
+        description: validatedData.description,
+        lessonCount: validatedData.lessonCount,
+        duration: validatedData.duration,
+        price: validatedData.price,
+        // Non aggiorniamo teacherId per sicurezza
+      },
+    });
+
+    // Revalida la cache
+    revalidatePath("/teacher/packages");
+    revalidatePath(`/teacher/packages/${validatedData.id}`);
+    revalidatePath("/teacher/dashboard");
+
+    // Serializza per il client
+    const serializedPackage = {
+      ...updatedPackage,
+      price: updatedPackage.price.toNumber(),
+      createdAt: updatedPackage.createdAt.toISOString(),
+      updatedAt: updatedPackage.updatedAt.toISOString(),
+    };
+
+    return { 
+      success: true, 
+      data: serializedPackage 
+    };
+
+  } catch (error) {
+    console.error("Errore nell'aggiornamento del pacchetto:", error);
+    
+    if (error instanceof z.ZodError) {
+      return { 
+        success: false, 
+        error: "Dati non validi: " + error.errors.map(e => e.message).join(", ")
+      };
+    }
+
+    return { 
+      success: false, 
+      error: "Errore interno del server" 
+    };
+  }
+}
