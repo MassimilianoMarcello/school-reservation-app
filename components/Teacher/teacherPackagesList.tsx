@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatPrice, getPricePerLesson, formatDuration, getTotalDuration } from "@/lib/package-utils";
+import { TogglePackageButton } from "./TogglePackageButton";
 
 // Tipi basati sul tuo modello Prisma
 interface LessonPackage {
@@ -81,26 +82,7 @@ export function TeacherPackagesClient({ teacher, isOwner = false }: TeacherPacka
     }
   };
 
-  const handleToggleActive = async (packageId: number, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/packages/${packageId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (response.ok) {
-        router.refresh();
-      } else {
-        const error = await response.json();
-        alert(error.error || "Errore nell'aggiornamento del pacchetto");
-      }
-    } catch  {
-      alert("Errore nell'aggiornamento del pacchetto");
-    }
-  };
+  
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('it-IT', {
@@ -323,14 +305,13 @@ export function TeacherPackagesClient({ teacher, isOwner = false }: TeacherPacka
                   
                   {isOwner ? (
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(pkg.id, pkg.isActive)}
-                        className="flex-1"
-                      >
-                        {pkg.isActive ? "Disattiva" : "Attiva"}
-                      </Button>
+           
+                       <TogglePackageButton
+          packageId={pkg.id}
+          isActive={pkg.isActive}
+          name={pkg.name}
+          variant="switch"
+        />
                       <Button
                         variant="outline"
                         size="sm"

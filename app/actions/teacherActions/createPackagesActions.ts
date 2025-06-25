@@ -284,3 +284,57 @@ export async function updateLessonPackage(data: UpdatePackageInput) {
     };
   }
 }
+
+
+// action per attivare /disatttivare un pacchetto
+
+// Aggiungi questa funzione al tuo file teacherActions/createPackagesActions.ts
+
+export async function togglePackageStatus(packageId: number) {
+  try {
+    const session = await auth();
+    
+    if (!session?.user?.id || session.user.role !== "TEACHER") {
+      return { success: false, error: "Non autorizzato" };
+    }
+
+    // Verifica che il pacchetto appartenga al teacher
+    const existingPackage = await prisma.lessonPackage.findFirst({
+      where: {
+        id: packageId,
+        teacherId: session.user.id,
+      },
+      select: {
+        id: true,
+        isActive: true,
+        name: true,
+      },
+    });
+
+    if (!existingPackage) {
+      return { success: false, error: "Pacchetto non trovato" };
+    }
+
+    // Toggle dello status
+    const updatedPackage = await prisma.lessonPackage.update({
+      where: {
+        id: packageId,
+      },
+      data: {
+        isActive: !existingPackage.isActive,
+      },
+    });
+
+    revalidatePath("/teacher/packages");
+    
+    return { 
+      success: true, 
+      isActive: updatedPackage.isActive,
+      message: `Pacchetto "${existingPackage.name}" ${updatedPackage.isActive ? 'attivato' : 'disattivato'} con successo`
+    };
+    
+  } catch (error) {
+    console.error("Errore nel toggle status:", error);
+    return { success: false, error: "Errore durante l'aggiornamento" };
+  }
+}
