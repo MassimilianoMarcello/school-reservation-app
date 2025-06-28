@@ -1,104 +1,691 @@
-"use client"
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, Check, X, Plus, CalendarIcon, Users, Repeat, Edit } from "lucide-react"
+// "use client"
+// import * as React from "react"
+// import { Button } from "@/components/ui/button"
+// import { Calendar } from "@/components/ui/calendar"
+// import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Badge } from "@/components/ui/badge"
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+// import { Input } from "@/components/ui/input"
+// import { Label } from "@/components/ui/label"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// import { Checkbox } from "@/components/ui/checkbox"
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// import { Clock, Check, X, Plus, CalendarIcon, Users, Repeat, Edit } from "lucide-react"
 
-// Types inline per semplicità
-interface TimeSlot {
-  id: number
-  date: Date
-  startTime: string
-  endTime: string
-  duration: number
-  isActive: boolean
-  source: 'MANUAL' | 'TEMPLATE'
-  templateId?: string
-}
+// // Types inline per semplicità
+// interface TimeSlot {
+//   id: number
+//   date: Date
+//   startTime: string
+//   endTime: string
+//   duration: number
+//   isActive: boolean
+//   source: 'MANUAL' | 'TEMPLATE'
+//   templateId?: string
+// }
 
-interface Booking {
-  id: number
-  timeSlotId: number
-  status: 'CONFIRMED' | 'CANCELLED'
-  student: {
-    username: string
-    email: string
-  }
-}
+// interface Booking {
+//   id: number
+//   timeSlotId: number
+//   status: 'CONFIRMED' | 'CANCELLED'
+//   student: {
+//     username: string
+//     email: string
+//   }
+// }
+
+// const weekDays = [
+//   { value: 0, label: 'Domenica' },
+//   { value: 1, label: 'Lunedì' },
+//   { value: 2, label: 'Martedì' },
+//   { value: 3, label: 'Mercoledì' },
+//   { value: 4, label: 'Giovedì' },
+//   { value: 5, label: 'Venerdì' },
+//   { value: 6, label: 'Sabato' },
+// ]
+
+// export default function TeacherAvailabilityCalendar() {
+//   const [date, setDate] = React.useState<Date | undefined>(new Date(2025, 5, 12))
+
+//   // Dati simulati - mantenuti identici
+//   const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([
+//     {
+//       id: 1,
+//       date: new Date(2025, 5, 12),
+//       startTime: "10:00",
+//       endTime: "10:30",
+//       duration: 30,
+//       isActive: true,
+//       source: 'MANUAL'
+//     },
+//     {
+//       id: 2,
+//       date: new Date(2025, 5, 12),
+//       startTime: "14:00",
+//       endTime: "15:00",
+//       duration: 60,
+//       isActive: true,
+//       source: 'TEMPLATE',
+//       templateId: "template_001"
+//     },
+//     {
+//       id: 3,
+//       date: new Date(2025, 5, 13),
+//       startTime: "14:00",
+//       endTime: "15:00",
+//       duration: 60,
+//       isActive: true,
+//       source: 'TEMPLATE',
+//       templateId: "template_001"
+//     }
+//   ])
+
+//   const [bookings] = React.useState<Booking[]>([
+//     {
+//       id: 1,
+//       timeSlotId: 1,
+//       status: 'CONFIRMED',
+//       student: {
+//         username: "Marco Rossi",
+//         email: "marco@example.com"
+//       }
+//     }
+//   ])
+
+//   // Stati semplificati per i form
+//   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
+//   const [createMode, setCreateMode] = React.useState<'manual' | 'template'>('manual')
+//   const [manualForm, setManualForm] = React.useState({
+//     startTime: "09:00",
+//     duration: 30
+//   })
+//   const [templateForm, setTemplateForm] = React.useState({
+//     name: "",
+//     weekDays: [] as number[],
+//     startTime: "09:00",
+//     endTime: "18:00",
+//     duration: 30,
+//     startDate: new Date(),
+//     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+//   })
+
+//   // Utility functions consolidate
+//   const formatDateKey = (date: Date) => date.toISOString().split('T')[0]
+
+//   const calculateEndTime = (startTime: string, duration: number) => {
+//     const [hours, minutes] = startTime.split(':').map(Number)
+//     const totalMinutes = hours * 60 + minutes + duration
+//     const newHours = Math.floor(totalMinutes / 60)
+//     const newMinutes = totalMinutes % 60
+//     return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`
+//   }
+
+//   const getTimeSlotsForDate = (selectedDate: Date) =>
+//     timeSlots.filter(slot =>
+//       formatDateKey(slot.date) === formatDateKey(selectedDate) && slot.isActive
+//     )
+
+//   const getBookingForTimeSlot = (timeSlotId: number) =>
+//     bookings.find(booking =>
+//       booking.timeSlotId === timeSlotId && booking.status !== 'CANCELLED'
+//     )
+
+//   // Funzione per generare time slots basati su template
+//   const generateTimeSlots = (startTime: string, endTime: string, duration: number) => {
+//     const slots = []
+//     const [startHour, startMin] = startTime.split(':').map(Number)
+//     const [endHour, endMin] = endTime.split(':').map(Number)
+
+//     let currentMinutes = startHour * 60 + startMin
+//     const endMinutes = endHour * 60 + endMin
+
+//     while (currentMinutes + duration <= endMinutes) {
+//       const slotStartTime = `${Math.floor(currentMinutes / 60).toString().padStart(2, '0')}:${(currentMinutes % 60).toString().padStart(2, '0')}`
+//       slots.push({
+//         startTime: slotStartTime,
+//         endTime: calculateEndTime(slotStartTime, duration)
+//       })
+//       currentMinutes += duration
+//     }
+//     return slots
+//   }
+
+//   // Handler consolidati
+//   const createManualSlot = () => {
+//     if (!date) return
+
+//     const endTime = calculateEndTime(manualForm.startTime, manualForm.duration)
+
+//     // Check overlaps
+//     const hasOverlap = timeSlots.some(slot =>
+//       formatDateKey(slot.date) === formatDateKey(date) &&
+//       slot.startTime === manualForm.startTime &&
+//       slot.isActive
+//     )
+
+//     if (hasOverlap) {
+//       alert("Esiste già un time slot per questo orario!")
+//       return
+//     }
+
+//     const newSlot: TimeSlot = {
+//       id: Math.max(...timeSlots.map(s => s.id), 0) + 1,
+//       date: new Date(date),
+//       startTime: manualForm.startTime,
+//       endTime,
+//       duration: manualForm.duration,
+//       isActive: true,
+//       source: 'MANUAL'
+//     }
+
+//     setTimeSlots(prev => [...prev, newSlot])
+//     setIsCreateDialogOpen(false)
+//     setManualForm({ startTime: "09:00", duration: 30 })
+//   }
+
+//   const createTemplate = () => {
+//     if (templateForm.weekDays.length === 0 || !templateForm.name) {
+//       alert("Seleziona almeno un giorno e inserisci un nome per il template!")
+//       return
+//     }
+
+//     const templateId = `template_${Date.now()}`
+//     const generatedSlots = generateTimeSlots(templateForm.startTime, templateForm.endTime, templateForm.duration)
+//     const newSlots: TimeSlot[] = []
+
+//     const currentDate = new Date(templateForm.startDate)
+//     const endDate = new Date(templateForm.endDate)
+
+//     while (currentDate <= endDate) {
+//       if (templateForm.weekDays.includes(currentDate.getDay())) {
+//         generatedSlots.forEach(slot => {
+//           const hasConflict = timeSlots.some(existingSlot =>
+//             formatDateKey(existingSlot.date) === formatDateKey(currentDate) &&
+//             existingSlot.startTime === slot.startTime &&
+//             existingSlot.isActive
+//           )
+
+//           if (!hasConflict) {
+//             newSlots.push({
+//               id: Math.max(...timeSlots.map(s => s.id), ...newSlots.map(s => s.id), 0) + 1,
+//               date: new Date(currentDate),
+//               startTime: slot.startTime,
+//               endTime: slot.endTime,
+//               duration: templateForm.duration,
+//               isActive: true,
+//               source: 'TEMPLATE',
+//               templateId
+//             })
+//           }
+//         })
+//       }
+//       currentDate.setDate(currentDate.getDate() + 1)
+//     }
+
+//     setTimeSlots(prev => [...prev, ...newSlots])
+//     setIsCreateDialogOpen(false)
+//     setTemplateForm({
+//       name: "",
+//       weekDays: [],
+//       startTime: "09:00",
+//       endTime: "18:00",
+//       duration: 30,
+//       startDate: new Date(),
+//       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+//     })
+//     alert(`Template creato! Aggiunti ${newSlots.length} time slots.`)
+//   }
+
+//   const deleteTimeSlot = (timeSlotId: number) => {
+//     const booking = getBookingForTimeSlot(timeSlotId)
+//     if (booking && !confirm("Questo slot ha una prenotazione attiva. Vuoi davvero eliminarlo?")) {
+//       return
+//     }
+//     setTimeSlots(prev => prev.filter(slot => slot.id !== timeSlotId))
+//   }
+
+//   const toggleSlotActive = (timeSlotId: number) => {
+//     setTimeSlots(prev => prev.map(slot =>
+//       slot.id === timeSlotId ? { ...slot, isActive: !slot.isActive } : slot
+//     ))
+//   }
+
+//   // Computed values
+//   const selectedDateSlots = date ? getTimeSlotsForDate(date) : []
+//   const availableCount = selectedDateSlots.filter(slot => !getBookingForTimeSlot(slot.id)).length
+//   const bookedCount = selectedDateSlots.filter(slot => getBookingForTimeSlot(slot.id)).length
+
+//   // Time options per il form
+//   const timeOptions = Array.from({ length: 19 }, (_, i) => {
+//     const hour = Math.floor(i / 2) + 9
+//     const minute = (i % 2) * 30
+//     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+//   })
+
+//   return (
+//     <Card className="gap-0 p-0 max-w-6xl mx-auto">
+//       <CardHeader className="border-b">
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center gap-2">
+//             <Clock className="w-5 h-5" />
+//             <CardTitle>Gestione Disponibilità Insegnante</CardTitle>
+//           </div>
+
+//           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+//             <DialogTrigger asChild>
+//               <Button size="sm">
+//                 <Plus className="w-4 h-4 mr-2" />
+//                 Crea Disponibilità
+//               </Button>
+//             </DialogTrigger>
+
+//             <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+//               <DialogHeader>
+//                 <DialogTitle>Crea Nuove Disponibilità</DialogTitle>
+//               </DialogHeader>
+
+//               <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'manual' | 'template')}>
+//                 <TabsList className="grid w-full grid-cols-2">
+//                   <TabsTrigger value="manual" className="flex items-center gap-2">
+//                     <Edit className="w-4 h-4" />
+//                     Manuale
+//                   </TabsTrigger>
+//                   <TabsTrigger value="template" className="flex items-center gap-2">
+//                     <Repeat className="w-4 h-4" />
+//                     Template
+//                   </TabsTrigger>
+//                 </TabsList>
+
+//                 <TabsContent value="manual" className="space-y-4">
+//                   <div className="text-sm text-muted-foreground">
+//                     Crea un singolo time slot per la data selezionata: {date?.toLocaleDateString('it-IT')}
+//                   </div>
+
+//                   <div className="grid grid-cols-2 gap-4">
+//                     <div>
+//                       <Label>Orario Inizio</Label>
+//                       <Select value={manualForm.startTime} onValueChange={(value) => setManualForm(prev => ({ ...prev, startTime: value }))}>
+//                         <SelectTrigger><SelectValue /></SelectTrigger>
+//                         <SelectContent>
+//                           {timeOptions.map(time => (
+//                             <SelectItem key={time} value={time}>{time}</SelectItem>
+//                           ))}
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+
+//                     <div>
+//                       <Label>Durata</Label>
+//                       <Select value={manualForm.duration.toString()} onValueChange={(value) => setManualForm(prev => ({ ...prev, duration: parseInt(value) }))}>
+//                         <SelectTrigger><SelectValue /></SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="30">30 minuti</SelectItem>
+//                           <SelectItem value="60">60 minuti</SelectItem>
+//                           <SelectItem value="90">90 minuti</SelectItem>
+//                           <SelectItem value="120">120 minuti</SelectItem>
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+//                   </div>
+
+//                   <div>
+//                     <Label>Orario Fine (automatico)</Label>
+//                     <Input value={calculateEndTime(manualForm.startTime, manualForm.duration)} disabled className="bg-muted" />
+//                   </div>
+
+//                   <div className="flex gap-2 pt-4">
+//                     <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline" className="flex-1">
+//                       Annulla
+//                     </Button>
+//                     <Button onClick={createManualSlot} className="flex-1" disabled={!date}>
+//                       Crea Slot
+//                     </Button>
+//                   </div>
+//                 </TabsContent>
+
+//                 <TabsContent value="template" className="space-y-4">
+//                   <div className="text-sm text-muted-foreground">
+//                     Crea time slots ricorrenti per giorni e orari specifici
+//                   </div>
+
+//                   <div>
+//                     <Label>Nome Template</Label>
+//                     <Input
+//                       value={templateForm.name}
+//                       onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+//                       placeholder="es. Lezioni pomeridiane"
+//                     />
+//                   </div>
+
+//                   <div>
+//                     <Label>Giorni della settimana</Label>
+//                     <div className="grid grid-cols-2 gap-2 mt-2">
+//                       {weekDays.map(day => (
+//                         <div key={day.value} className="flex items-center space-x-2">
+//                           <Checkbox
+//                             id={`day-${day.value}`}
+//                             checked={templateForm.weekDays.includes(day.value)}
+//                             onCheckedChange={(checked) => {
+//                               setTemplateForm(prev => ({
+//                                 ...prev,
+//                                 weekDays: checked
+//                                   ? [...prev.weekDays, day.value]
+//                                   : prev.weekDays.filter(d => d !== day.value)
+//                               }))
+//                             }}
+//                           />
+//                           <Label htmlFor={`day-${day.value}`} className="text-sm">
+//                             {day.label}
+//                           </Label>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   </div>
+
+//                   <div className="grid grid-cols-3 gap-4">
+//                     <div>
+//                       <Label>Ora Inizio</Label>
+//                       <Input
+//                         type="time"
+//                         value={templateForm.startTime}
+//                         onChange={(e) => setTemplateForm(prev => ({ ...prev, startTime: e.target.value }))}
+//                       />
+//                     </div>
+//                     <div>
+//                       <Label>Ora Fine</Label>
+//                       <Input
+//                         type="time"
+//                         value={templateForm.endTime}
+//                         onChange={(e) => setTemplateForm(prev => ({ ...prev, endTime: e.target.value }))}
+//                       />
+//                     </div>
+//                     <div>
+//                       <Label>Durata Slot</Label>
+//                       <Select value={templateForm.duration.toString()} onValueChange={(value) => setTemplateForm(prev => ({ ...prev, duration: parseInt(value) }))}>
+//                         <SelectTrigger><SelectValue /></SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="30">30 min</SelectItem>
+//                           <SelectItem value="60">60 min</SelectItem>
+//                           <SelectItem value="90">90 min</SelectItem>
+//                           <SelectItem value="120">120 min</SelectItem>
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+//                   </div>
+
+//                   <div className="grid grid-cols-2 gap-4">
+//                     <div>
+//                       <Label>Data Inizio</Label>
+//                       <Input
+//                         type="date"
+//                         value={templateForm.startDate.toISOString().split('T')[0]}
+//                         onChange={(e) => setTemplateForm(prev => ({ ...prev, startDate: new Date(e.target.value) }))}
+//                       />
+//                     </div>
+//                     <div>
+//                       <Label>Data Fine</Label>
+//                       <Input
+//                         type="date"
+//                         value={templateForm.endDate.toISOString().split('T')[0]}
+//                         onChange={(e) => setTemplateForm(prev => ({ ...prev, endDate: new Date(e.target.value) }))}
+//                       />
+//                     </div>
+//                   </div>
+
+//                   <div className="flex gap-2 pt-4">
+//                     <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline" className="flex-1">
+//                       Annulla
+//                     </Button>
+//                     <Button onClick={createTemplate} className="flex-1">
+//                       Crea Template
+//                     </Button>
+//                   </div>
+//                 </TabsContent>
+//               </Tabs>
+//             </DialogContent>
+//           </Dialog>
+//         </div>
+//       </CardHeader>
+
+//       <CardContent className="relative p-0 lg:pr-96">
+//         <div className="p-6">
+//           <Calendar
+//             mode="single"
+//             selected={date}
+//             onSelect={setDate}
+//             defaultMonth={date}
+//             showOutsideDays={false}
+//             className="bg-transparent p-0 [--cell-size:--spacing(10)] md:[--cell-size:--spacing(12)]"
+//             formatters={{
+//               formatWeekdayName: (date) => {
+//                 return date.toLocaleString("it-IT", { weekday: "short" })
+//               },
+//             }}
+//           />
+//         </div>
+
+//         <div className="inset-y-0 right-0 flex max-h-96 w-full flex-col border-t p-6 lg:absolute lg:max-h-none lg:w-96 lg:border-t-0 lg:border-l">
+//           {date ? (
+//             <>
+//               <div className="mb-4">
+//                 <h3 className="font-semibold mb-2">
+//                   {date.toLocaleDateString("it-IT", {
+//                     weekday: "long",
+//                     day: "numeric",
+//                     month: "long",
+//                     year: "numeric"
+//                   })}
+//                 </h3>
+//                 <div className="flex gap-2 text-sm">
+//                   <Badge variant="default" className="bg-green-100 text-green-800">
+//                     <CalendarIcon className="w-3 h-3 mr-1" />
+//                     {availableCount} liberi
+//                   </Badge>
+//                   <Badge variant="destructive">
+//                     <Users className="w-3 h-3 mr-1" />
+//                     {bookedCount} prenotati
+//                   </Badge>
+//                 </div>
+//               </div>
+
+//               <div className="no-scrollbar overflow-y-auto scroll-pb-6">
+//                 {selectedDateSlots.length === 0 ? (
+//                   <div className="text-center py-8 text-muted-foreground">
+//                     <CalendarIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+//                     <p className="text-sm">Nessuna disponibilità</p>
+//                     <p className="text-xs">Crea nuovi time slots</p>
+//                   </div>
+//                 ) : (
+//                   <div className="space-y-2">
+//                     {selectedDateSlots
+//                       .sort((a, b) => a.startTime.localeCompare(b.startTime))
+//                       .map((slot) => {
+//                         const booking = getBookingForTimeSlot(slot.id)
+//                         const isBooked = !!booking
+
+//                         return (
+//                           <div key={slot.id} className="space-y-1">
+//                             <div className="flex items-center gap-2">
+//                               <Button
+//                                 variant={isBooked ? "destructive" : slot.isActive ? "default" : "outline"}
+//                                 className="flex-1 justify-between shadow-none"
+//                                 onClick={() => !isBooked && toggleSlotActive(slot.id)}
+//                                 disabled={isBooked}
+//                               >
+//                                 <span className="flex items-center gap-2">
+//                                   {slot.startTime} - {slot.endTime}
+//                                   {slot.source === 'TEMPLATE' && (
+//                                     <Repeat className="w-3 h-3 opacity-60" />
+//                                   )}
+//                                 </span>
+//                                 <div className="flex items-center gap-1">
+//                                   <span className="text-xs opacity-70">
+//                                     {slot.duration}min
+//                                   </span>
+//                                   {isBooked ? (
+//                                     <X className="w-4 h-4" />
+//                                   ) : slot.isActive ? (
+//                                     <Check className="w-4 h-4" />
+//                                   ) : (
+//                                     <X className="w-4 h-4 opacity-50" />
+//                                   )}
+//                                 </div>
+//                               </Button>
+
+//                               {!isBooked && (
+//                                 <Button
+//                                   variant="outline"
+//                                   size="sm"
+//                                   onClick={() => deleteTimeSlot(slot.id)}
+//                                   className="px-2 hover:bg-red-50"
+//                                 >
+//                                   <X className="w-4 h-4" />
+//                                 </Button>
+//                               )}
+//                             </div>
+
+//                             {booking && (
+//                               <div className="ml-2 p-2 bg-red-50 rounded text-xs">
+//                                 <div className="font-medium text-red-800">
+//                                   {booking.student.username || booking.student.email}
+//                                 </div>
+//                                 <div className="text-red-600">
+//                                   {booking.status}
+//                                 </div>
+//                               </div>
+//                             )}
+
+//                             {!slot.isActive && !booking && (
+//                               <div className="ml-2 p-1 bg-gray-50 rounded text-xs text-gray-600">
+//                                 Slot disattivato
+//                               </div>
+//                             )}
+//                           </div>
+//                         )
+//                       })}
+//                   </div>
+//                 )}
+//               </div>
+//             </>
+//           ) : (
+//             <div className="flex items-center justify-center h-32 text-muted-foreground">
+//               <div className="text-center">
+//                 <CalendarIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+//                 <p className="text-sm">Seleziona una data</p>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </CardContent>
+
+//       <CardFooter className="flex flex-col gap-4 border-t px-6 !py-5 md:flex-row">
+//         <div className="text-sm flex-1">
+//           {date ? (
+//             <div className="space-y-1">
+//               <div className="font-medium">Riepilogo giornata:</div>
+//               <div className="text-muted-foreground">
+//                 {selectedDateSlots.length > 0 ? (
+//                   `${selectedDateSlots.length} slot totali • ${availableCount} disponibili • ${bookedCount} prenotati`
+//                 ) : (
+//                   "Nessuna disponibilità programmata"
+//                 )}
+//               </div>
+//             </div>
+//           ) : (
+//             "Seleziona una data per gestire le tue disponibilità."
+//           )}
+//         </div>
+
+//         <Button className="w-full md:w-auto">
+//           Salva Modifiche
+//         </Button>
+//       </CardFooter>
+//     </Card>
+//   )
+// }
+
+"use client";
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Clock,
+  Check,
+  X,
+  Plus,
+  Calendar as CalendarIcon,
+  Users,
+  Repeat,
+  Edit,
+  Loader2,
+} from "lucide-react";
+// import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
+
+// Import corretto delle server actions
+import {
+  getTeacherTimeSlotsForDate,
+  createManualTimeSlot,
+  createTemplateTimeSlots,
+  deleteTimeSlot,
+  toggleTimeSlotActive,
+  type TimeSlotWithBookings,
+  type CreateManualSlotData,
+  type CreateTemplateData,
+} from "@/hooks/use-toast";
 
 const weekDays = [
-  { value: 0, label: 'Domenica' },
-  { value: 1, label: 'Lunedì' },
-  { value: 2, label: 'Martedì' },
-  { value: 3, label: 'Mercoledì' },
-  { value: 4, label: 'Giovedì' },
-  { value: 5, label: 'Venerdì' },
-  { value: 6, label: 'Sabato' },
-]
+  { value: 0, label: "Domenica" },
+  { value: 1, label: "Lunedì" },
+  { value: 2, label: "Martedì" },
+  { value: 3, label: "Mercoledì" },
+  { value: 4, label: "Giovedì" },
+  { value: 5, label: "Venerdì" },
+  { value: 6, label: "Sabato" },
+];
 
 export default function TeacherAvailabilityCalendar() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date(2025, 5, 12))
-  
-  // Dati simulati - mantenuti identici
-  const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([
-    {
-      id: 1,
-      date: new Date(2025, 5, 12),
-      startTime: "10:00",
-      endTime: "10:30",
-      duration: 30,
-      isActive: true,
-      source: 'MANUAL'
-    },
-    {
-      id: 2,
-      date: new Date(2025, 5, 12),
-      startTime: "14:00",
-      endTime: "15:00",
-      duration: 60,
-      isActive: true,
-      source: 'TEMPLATE',
-      templateId: "template_001"
-    },
-    {
-      id: 3,
-      date: new Date(2025, 5, 13),
-      startTime: "14:00",
-      endTime: "15:00",
-      duration: 60,
-      isActive: true,
-      source: 'TEMPLATE',
-      templateId: "template_001"
-    }
-  ])
+  // const { toast } = useToast()
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [timeSlots, setTimeSlots] = React.useState<TimeSlotWithBookings[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
+  const [createMode, setCreateMode] = React.useState<"manual" | "template">(
+    "manual"
+  );
 
-  const [bookings] = React.useState<Booking[]>([
-    {
-      id: 1,
-      timeSlotId: 1,
-      status: 'CONFIRMED',
-      student: {
-        username: "Marco Rossi",
-        email: "marco@example.com"
-      }
-    }
-  ])
-
-  // Stati semplificati per i form
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
-  const [createMode, setCreateMode] = React.useState<'manual' | 'template'>('manual')
+  // Form states
   const [manualForm, setManualForm] = React.useState({
     startTime: "09:00",
-    duration: 30
-  })
+    duration: 30,
+  });
+
   const [templateForm, setTemplateForm] = React.useState({
     name: "",
     weekDays: [] as number[],
@@ -106,161 +693,227 @@ export default function TeacherAvailabilityCalendar() {
     endTime: "18:00",
     duration: 30,
     startDate: new Date(),
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  })
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  });
 
-  // Utility functions consolidate
-  const formatDateKey = (date: Date) => date.toISOString().split('T')[0]
-  
-  const calculateEndTime = (startTime: string, duration: number) => {
-    const [hours, minutes] = startTime.split(':').map(Number)
-    const totalMinutes = hours * 60 + minutes + duration
-    const newHours = Math.floor(totalMinutes / 60)
-    const newMinutes = totalMinutes % 60
-    return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`
-  }
-
-  const getTimeSlotsForDate = (selectedDate: Date) =>
-    timeSlots.filter(slot => 
-      formatDateKey(slot.date) === formatDateKey(selectedDate) && slot.isActive
-    )
-
-  const getBookingForTimeSlot = (timeSlotId: number) =>
-    bookings.find(booking => 
-      booking.timeSlotId === timeSlotId && booking.status !== 'CANCELLED'
-    )
-
-  // Funzione per generare time slots basati su template
-  const generateTimeSlots = (startTime: string, endTime: string, duration: number) => {
-    const slots = []
-    const [startHour, startMin] = startTime.split(':').map(Number)
-    const [endHour, endMin] = endTime.split(':').map(Number)
-    
-    let currentMinutes = startHour * 60 + startMin
-    const endMinutes = endHour * 60 + endMin
-    
-    while (currentMinutes + duration <= endMinutes) {
-      const slotStartTime = `${Math.floor(currentMinutes / 60).toString().padStart(2, '0')}:${(currentMinutes % 60).toString().padStart(2, '0')}`
-      slots.push({
-        startTime: slotStartTime,
-        endTime: calculateEndTime(slotStartTime, duration)
-      })
-      currentMinutes += duration
+  // Load time slots when date changes
+  React.useEffect(() => {
+    if (date) {
+      loadTimeSlots(date);
     }
-    return slots
-  }
+  }, [date]);
 
-  // Handler consolidati
-  const createManualSlot = () => {
-    if (!date) return
+  const loadTimeSlots = async (selectedDate: Date) => {
+    try {
+      setLoading(true);
+      const result = await getTeacherTimeSlotsForDate(selectedDate);
 
-    const endTime = calculateEndTime(manualForm.startTime, manualForm.duration)
-    
-    // Check overlaps
-    const hasOverlap = timeSlots.some(slot => 
-      formatDateKey(slot.date) === formatDateKey(date) &&
-      slot.startTime === manualForm.startTime &&
-      slot.isActive
-    )
+      if (result.success && result.data) {
+        setTimeSlots(
+          result.data.map((slot: any) => ({
+            ...slot,
+            bookings: slot.bookings.map((booking: any) => ({
+              ...booking,
+              student: {
+                ...booking.student,
+                email: booking.student.email ?? "",
+              },
+            })),
+          }))
+        );
+      } else {
 
-    if (hasOverlap) {
-      alert("Esiste già un time slot per questo orario!")
-      return
-    }
-
-    const newSlot: TimeSlot = {
-      id: Math.max(...timeSlots.map(s => s.id), 0) + 1,
-      date: new Date(date),
-      startTime: manualForm.startTime,
-      endTime,
-      duration: manualForm.duration,
-      isActive: true,
-      source: 'MANUAL'
-    }
-
-    setTimeSlots(prev => [...prev, newSlot])
-    setIsCreateDialogOpen(false)
-    setManualForm({ startTime: "09:00", duration: 30 })
-  }
-
-  const createTemplate = () => {
-    if (templateForm.weekDays.length === 0 || !templateForm.name) {
-      alert("Seleziona almeno un giorno e inserisci un nome per il template!")
-      return
-    }
-
-    const templateId = `template_${Date.now()}`
-    const generatedSlots = generateTimeSlots(templateForm.startTime, templateForm.endTime, templateForm.duration)
-    const newSlots: TimeSlot[] = []
-
-    const currentDate = new Date(templateForm.startDate)
-    const endDate = new Date(templateForm.endDate)
-
-    while (currentDate <= endDate) {
-      if (templateForm.weekDays.includes(currentDate.getDay())) {
-        generatedSlots.forEach(slot => {
-          const hasConflict = timeSlots.some(existingSlot => 
-            formatDateKey(existingSlot.date) === formatDateKey(currentDate) &&
-            existingSlot.startTime === slot.startTime &&
-            existingSlot.isActive
-          )
-
-          if (!hasConflict) {
-            newSlots.push({
-              id: Math.max(...timeSlots.map(s => s.id), ...newSlots.map(s => s.id), 0) + 1,
-              date: new Date(currentDate),
-              startTime: slot.startTime,
-              endTime: slot.endTime,
-              duration: templateForm.duration,
-              isActive: true,
-              source: 'TEMPLATE',
-              templateId
-            })
-          }
-        })
+        toast("Errore nel caricamento dello slot");
       }
-      currentDate.setDate(currentDate.getDate() + 1)
+    } catch {
+      toast("Errore nel caricamento dei time slots");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Utility functions
+  const calculateEndTime = (startTime: string, duration: number) => {
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes + duration;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;
+  };
+
+  const getBookingForTimeSlot = (timeSlot: TimeSlotWithBookings) => {
+    return timeSlot.bookings.find((booking) => booking.status !== "CANCELLED");
+  };
+
+  // Handler functions
+  const handleCreateManualSlot = async () => {
+    if (!date) return;
+
+    try {
+      setLoading(true);
+      const data: CreateManualSlotData = {
+        date: date,
+        startTime: manualForm.startTime,
+        duration: manualForm.duration,
+      };
+
+      const result = await createManualTimeSlot(data);
+
+      if (result.success) {
+        toast("Time slot creato con successo");
+
+        setIsCreateDialogOpen(false);
+        setManualForm({ startTime: "09:00", duration: 30 });
+        await loadTimeSlots(date);
+      } else {
+        toast("Errore nella creazione del time slot");
+      }
+    } catch {
+      toast("Errore nella creazione del time slot");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTemplate = async () => {
+    if (templateForm.weekDays.length === 0 || !templateForm.name) {
+      toast("Seleziona almeno un giorno e inserisci un nome per il template!");
+      return;
     }
 
-    setTimeSlots(prev => [...prev, ...newSlots])
-    setIsCreateDialogOpen(false)
-    setTemplateForm({
-      name: "",
-      weekDays: [],
-      startTime: "09:00",
-      endTime: "18:00",
-      duration: 30,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    })
-    alert(`Template creato! Aggiunti ${newSlots.length} time slots.`)
-  }
+    try {
+      setLoading(true);
+      const data: CreateTemplateData = {
+        name: templateForm.name,
+        weekDays: templateForm.weekDays,
+        startTime: templateForm.startTime,
+        endTime: templateForm.endTime,
+        duration: templateForm.duration,
+        startDate: templateForm.startDate,
+        endDate: templateForm.endDate,
+      };
 
-  const deleteTimeSlot = (timeSlotId: number) => {
-    const booking = getBookingForTimeSlot(timeSlotId)
-    if (booking && !confirm("Questo slot ha una prenotazione attiva. Vuoi davvero eliminarlo?")) {
-      return
+      const result = await createTemplateTimeSlots(data);
+
+      if (result.success && result.data) {
+        toast(
+          result.data.message,
+        );
+
+        setIsCreateDialogOpen(false);
+        setTemplateForm({
+          name: "",
+          weekDays: [],
+          startTime: "09:00",
+          endTime: "18:00",
+          duration: 30,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+
+        if (date) {
+          await loadTimeSlots(date);
+        }
+      } else {
+        toast("Errore nella creazione del template",
+      
+        );
+      }
+    } catch (error) {
+      toast(
+          error instanceof Error
+            ? error.message
+            : "Errore nella creazione del template",
+    
+      );
+    } finally {
+      setLoading(false);
     }
-    setTimeSlots(prev => prev.filter(slot => slot.id !== timeSlotId))
-  }
+  };
 
-  const toggleSlotActive = (timeSlotId: number) => {
-    setTimeSlots(prev => prev.map(slot => 
-      slot.id === timeSlotId ? { ...slot, isActive: !slot.isActive } : slot
-    ))
-  }
+  const handleDeleteTimeSlot = async (timeSlotId: number) => {
+    const timeSlot = timeSlots.find((slot) => slot.id === timeSlotId);
+    const booking = timeSlot ? getBookingForTimeSlot(timeSlot) : null;
+
+    if (
+      booking &&
+      !confirm(
+        "Questo slot ha una prenotazione attiva. Vuoi davvero eliminarlo?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await deleteTimeSlot(timeSlotId);
+
+      if (result.success) {
+        toast( result.message || "Time slot eliminato con successo",
+        );
+
+        if (date) {
+          await loadTimeSlots(date);
+        }
+      } else {
+        toast( result.error || "Errore nell'eliminazione del time slot",
+        
+        );
+      }
+    } catch (error) {
+      toast(
+          error instanceof Error
+            ? error.message
+            : "Errore nell'eliminazione del time slot",
+     
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleSlotActive = async (timeSlotId: number) => {
+    try {
+      setLoading(true);
+      const result = await toggleTimeSlotActive(timeSlotId);
+
+      if (result.success) {
+        if (date) {
+          await loadTimeSlots(date);
+        }
+      } else {
+        toast(
+        result.error || "Errore nel toggle del time slot",
+        
+        );
+      }
+    } catch (error) {
+      toast(
+          error instanceof Error
+            ? error.message
+            : "Errore nel toggle del time slot",
+     
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Computed values
-  const selectedDateSlots = date ? getTimeSlotsForDate(date) : []
-  const availableCount = selectedDateSlots.filter(slot => !getBookingForTimeSlot(slot.id)).length
-  const bookedCount = selectedDateSlots.filter(slot => getBookingForTimeSlot(slot.id)).length
+  const availableCount = timeSlots.filter(
+    (slot) => slot.isActive && !getBookingForTimeSlot(slot)
+  ).length;
 
-  // Time options per il form
+  const bookedCount = timeSlots.filter((slot) =>
+    getBookingForTimeSlot(slot)
+  ).length;
+
+  // Time options for forms
   const timeOptions = Array.from({ length: 19 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 9
-    const minute = (i % 2) * 30
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-  })
+    const hour = Math.floor(i / 2) + 9;
+    const minute = (i % 2) * 30;
+    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+  });
 
   return (
     <Card className="gap-0 p-0 max-w-6xl mx-auto">
@@ -270,54 +923,89 @@ export default function TeacherAvailabilityCalendar() {
             <Clock className="w-5 h-5" />
             <CardTitle>Gestione Disponibilità Insegnante</CardTitle>
           </div>
-          
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
+          >
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" disabled={loading}>
                 <Plus className="w-4 h-4 mr-2" />
                 Crea Disponibilità
               </Button>
             </DialogTrigger>
-            
+
             <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crea Nuove Disponibilità</DialogTitle>
               </DialogHeader>
-              
-              <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'manual' | 'template')}>
+
+              <Tabs
+                value={createMode}
+                onValueChange={(v) => setCreateMode(v as "manual" | "template")}
+              >
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="manual" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="manual"
+                    className="flex items-center gap-2"
+                  >
                     <Edit className="w-4 h-4" />
                     Manuale
                   </TabsTrigger>
-                  <TabsTrigger value="template" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="template"
+                    className="flex items-center gap-2"
+                  >
                     <Repeat className="w-4 h-4" />
                     Template
                   </TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="manual" className="space-y-4">
                   <div className="text-sm text-muted-foreground">
-                    Crea un singolo time slot per la data selezionata: {date?.toLocaleDateString('it-IT')}
+                    Crea un singolo time slot per la data selezionata:{" "}
+                    {date?.toLocaleDateString("it-IT")}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Orario Inizio</Label>
-                      <Select value={manualForm.startTime} onValueChange={(value) => setManualForm(prev => ({ ...prev, startTime: value }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={manualForm.startTime}
+                        onValueChange={(value) =>
+                          setManualForm((prev) => ({
+                            ...prev,
+                            startTime: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
-                          {timeOptions.map(time => (
-                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                          {timeOptions.map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label>Durata</Label>
-                      <Select value={manualForm.duration.toString()} onValueChange={(value) => setManualForm(prev => ({ ...prev, duration: parseInt(value) }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={manualForm.duration.toString()}
+                        onValueChange={(value) =>
+                          setManualForm((prev) => ({
+                            ...prev,
+                            duration: parseInt(value),
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="30">30 minuti</SelectItem>
                           <SelectItem value="60">60 minuti</SelectItem>
@@ -327,68 +1015,105 @@ export default function TeacherAvailabilityCalendar() {
                       </Select>
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label>Orario Fine (automatico)</Label>
-                    <Input value={calculateEndTime(manualForm.startTime, manualForm.duration)} disabled className="bg-muted" />
+                    <Input
+                      value={calculateEndTime(
+                        manualForm.startTime,
+                        manualForm.duration
+                      )}
+                      disabled
+                      className="bg-muted"
+                    />
                   </div>
-                  
+
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline" className="flex-1">
+                    <Button
+                      onClick={() => setIsCreateDialogOpen(false)}
+                      variant="outline"
+                      className="flex-1"
+                      disabled={loading}
+                    >
                       Annulla
                     </Button>
-                    <Button onClick={createManualSlot} className="flex-1" disabled={!date}>
+                    <Button
+                      onClick={handleCreateManualSlot}
+                      className="flex-1"
+                      disabled={!date || loading}
+                    >
+                      {loading && (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      )}
                       Crea Slot
                     </Button>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="template" className="space-y-4">
                   <div className="text-sm text-muted-foreground">
                     Crea time slots ricorrenti per giorni e orari specifici
                   </div>
-                  
+
                   <div>
                     <Label>Nome Template</Label>
-                    <Input 
+                    <Input
                       value={templateForm.name}
-                      onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setTemplateForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       placeholder="es. Lezioni pomeridiane"
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Giorni della settimana</Label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                      {weekDays.map(day => (
-                        <div key={day.value} className="flex items-center space-x-2">
+                      {weekDays.map((day) => (
+                        <div
+                          key={day.value}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`day-${day.value}`}
                             checked={templateForm.weekDays.includes(day.value)}
                             onCheckedChange={(checked) => {
-                              setTemplateForm(prev => ({
+                              setTemplateForm((prev) => ({
                                 ...prev,
-                                weekDays: checked 
+                                weekDays: checked
                                   ? [...prev.weekDays, day.value]
-                                  : prev.weekDays.filter(d => d !== day.value)
-                              }))
+                                  : prev.weekDays.filter(
+                                      (d) => d !== day.value
+                                    ),
+                              }));
                             }}
                           />
-                          <Label htmlFor={`day-${day.value}`} className="text-sm">
+                          <Label
+                            htmlFor={`day-${day.value}`}
+                            className="text-sm"
+                          >
                             {day.label}
                           </Label>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label>Ora Inizio</Label>
                       <Input
                         type="time"
                         value={templateForm.startTime}
-                        onChange={(e) => setTemplateForm(prev => ({ ...prev, startTime: e.target.value }))}
+                        onChange={(e) =>
+                          setTemplateForm((prev) => ({
+                            ...prev,
+                            startTime: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div>
@@ -396,13 +1121,28 @@ export default function TeacherAvailabilityCalendar() {
                       <Input
                         type="time"
                         value={templateForm.endTime}
-                        onChange={(e) => setTemplateForm(prev => ({ ...prev, endTime: e.target.value }))}
+                        onChange={(e) =>
+                          setTemplateForm((prev) => ({
+                            ...prev,
+                            endTime: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div>
                       <Label>Durata Slot</Label>
-                      <Select value={templateForm.duration.toString()} onValueChange={(value) => setTemplateForm(prev => ({ ...prev, duration: parseInt(value) }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={templateForm.duration.toString()}
+                        onValueChange={(value) =>
+                          setTemplateForm((prev) => ({
+                            ...prev,
+                            duration: parseInt(value),
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="30">30 min</SelectItem>
                           <SelectItem value="60">60 min</SelectItem>
@@ -412,31 +1152,55 @@ export default function TeacherAvailabilityCalendar() {
                       </Select>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Data Inizio</Label>
                       <Input
                         type="date"
-                        value={templateForm.startDate.toISOString().split('T')[0]}
-                        onChange={(e) => setTemplateForm(prev => ({ ...prev, startDate: new Date(e.target.value) }))}
+                        value={
+                          templateForm.startDate.toISOString().split("T")[0]
+                        }
+                        onChange={(e) =>
+                          setTemplateForm((prev) => ({
+                            ...prev,
+                            startDate: new Date(e.target.value),
+                          }))
+                        }
                       />
                     </div>
                     <div>
                       <Label>Data Fine</Label>
                       <Input
                         type="date"
-                        value={templateForm.endDate.toISOString().split('T')[0]}
-                        onChange={(e) => setTemplateForm(prev => ({ ...prev, endDate: new Date(e.target.value) }))}
+                        value={templateForm.endDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setTemplateForm((prev) => ({
+                            ...prev,
+                            endDate: new Date(e.target.value),
+                          }))
+                        }
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline" className="flex-1">
+                    <Button
+                      onClick={() => setIsCreateDialogOpen(false)}
+                      variant="outline"
+                      className="flex-1"
+                      disabled={loading}
+                    >
                       Annulla
                     </Button>
-                    <Button onClick={createTemplate} className="flex-1">
+                    <Button
+                      onClick={handleCreateTemplate}
+                      className="flex-1"
+                      disabled={loading}
+                    >
+                      {loading && (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      )}
                       Crea Template
                     </Button>
                   </div>
@@ -446,7 +1210,7 @@ export default function TeacherAvailabilityCalendar() {
           </Dialog>
         </div>
       </CardHeader>
-      
+
       <CardContent className="relative p-0 lg:pr-96">
         <div className="p-6">
           <Calendar
@@ -458,12 +1222,12 @@ export default function TeacherAvailabilityCalendar() {
             className="bg-transparent p-0 [--cell-size:--spacing(10)] md:[--cell-size:--spacing(12)]"
             formatters={{
               formatWeekdayName: (date) => {
-                return date.toLocaleString("it-IT", { weekday: "short" })
+                return date.toLocaleString("it-IT", { weekday: "short" });
               },
             }}
           />
         </div>
-        
+
         <div className="inset-y-0 right-0 flex max-h-96 w-full flex-col border-t p-6 lg:absolute lg:max-h-none lg:w-96 lg:border-t-0 lg:border-l">
           {date ? (
             <>
@@ -473,11 +1237,14 @@ export default function TeacherAvailabilityCalendar() {
                     weekday: "long",
                     day: "numeric",
                     month: "long",
-                    year: "numeric"
+                    year: "numeric",
                   })}
                 </h3>
                 <div className="flex gap-2 text-sm">
-                  <Badge variant="default" className="bg-green-100 text-green-800">
+                  <Badge
+                    variant="default"
+                    className="bg-green-100 text-green-800"
+                  >
                     <CalendarIcon className="w-3 h-3 mr-1" />
                     {availableCount} liberi
                   </Badge>
@@ -487,9 +1254,16 @@ export default function TeacherAvailabilityCalendar() {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="no-scrollbar overflow-y-auto scroll-pb-6">
-                {selectedDateSlots.length === 0 ? (
+                {loading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                    <p className="text-sm text-muted-foreground">
+                      Caricamento...
+                    </p>
+                  </div>
+                ) : timeSlots.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <CalendarIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Nessuna disponibilità</p>
@@ -497,24 +1271,32 @@ export default function TeacherAvailabilityCalendar() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {selectedDateSlots
+                    {timeSlots
                       .sort((a, b) => a.startTime.localeCompare(b.startTime))
                       .map((slot) => {
-                        const booking = getBookingForTimeSlot(slot.id)
-                        const isBooked = !!booking
-                        
+                        const booking = getBookingForTimeSlot(slot);
+                        const isBooked = !!booking;
+
                         return (
                           <div key={slot.id} className="space-y-1">
                             <div className="flex items-center gap-2">
                               <Button
-                                variant={isBooked ? "destructive" : slot.isActive ? "default" : "outline"}
+                                variant={
+                                  isBooked
+                                    ? "destructive"
+                                    : slot.isActive
+                                      ? "default"
+                                      : "outline"
+                                }
                                 className="flex-1 justify-between shadow-none"
-                                onClick={() => !isBooked && toggleSlotActive(slot.id)}
-                                disabled={isBooked}
+                                onClick={() =>
+                                  !isBooked && handleToggleSlotActive(slot.id)
+                                }
+                                disabled={isBooked || loading}
                               >
                                 <span className="flex items-center gap-2">
                                   {slot.startTime} - {slot.endTime}
-                                  {slot.source === 'TEMPLATE' && (
+                                  {slot.source === "TEMPLATE" && (
                                     <Repeat className="w-3 h-3 opacity-60" />
                                   )}
                                 </span>
@@ -531,37 +1313,39 @@ export default function TeacherAvailabilityCalendar() {
                                   )}
                                 </div>
                               </Button>
-                              
+
                               {!isBooked && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => deleteTimeSlot(slot.id)}
+                                  onClick={() => handleDeleteTimeSlot(slot.id)}
                                   className="px-2 hover:bg-red-50"
+                                  disabled={loading}
                                 >
                                   <X className="w-4 h-4" />
                                 </Button>
                               )}
                             </div>
-                            
+
                             {booking && (
                               <div className="ml-2 p-2 bg-red-50 rounded text-xs">
                                 <div className="font-medium text-red-800">
-                                  {booking.student.username || booking.student.email}
+                                  {booking.student.username ||
+                                    booking.student.email}
                                 </div>
                                 <div className="text-red-600">
                                   {booking.status}
                                 </div>
                               </div>
                             )}
-                            
+
                             {!slot.isActive && !booking && (
                               <div className="ml-2 p-1 bg-gray-50 rounded text-xs text-gray-600">
                                 Slot disattivato
                               </div>
                             )}
                           </div>
-                        )
+                        );
                       })}
                   </div>
                 )}
@@ -577,29 +1361,23 @@ export default function TeacherAvailabilityCalendar() {
           )}
         </div>
       </CardContent>
-      
+
       <CardFooter className="flex flex-col gap-4 border-t px-6 !py-5 md:flex-row">
         <div className="text-sm flex-1">
           {date ? (
             <div className="space-y-1">
               <div className="font-medium">Riepilogo giornata:</div>
               <div className="text-muted-foreground">
-                {selectedDateSlots.length > 0 ? (
-                  `${selectedDateSlots.length} slot totali • ${availableCount} disponibili • ${bookedCount} prenotati`
-                ) : (
-                  "Nessuna disponibilità programmata"
-                )}
+                {timeSlots.length > 0
+                  ? `${timeSlots.length} slot totali • ${availableCount} disponibili • ${bookedCount} prenotati`
+                  : "Nessuna disponibilità programmata"}
               </div>
             </div>
           ) : (
             "Seleziona una data per gestire le tue disponibilità."
           )}
         </div>
-        
-        <Button className="w-full md:w-auto">
-          Salva Modifiche
-        </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
