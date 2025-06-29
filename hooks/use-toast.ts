@@ -220,7 +220,19 @@ export async function getTeacherTemplateGroups(teacherId?: string) {
       acc[slot.templateId].count++
       
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, {
+      templateId: string,
+      slots: {
+        templateId: string | null,
+        duration: number,
+        startTime: string,
+        endTime: string,
+        date: Date,
+        createdAt: Date
+      }[],
+      count: number,
+      createdAt: Date
+    }>)
     
     return { success: true, data: Object.values(groups) }
   } catch (error) {
@@ -497,7 +509,7 @@ export async function updateTimeSlot(timeSlotId: number, data: Partial<CreateMan
       return { success: false, error: "Non puoi modificare uno slot con prenotazioni attive" }
     }
     
-    const updateData: any = { updatedAt: new Date() }
+    const updateData: Partial<import("@prisma/client").TimeSlot> = { updatedAt: new Date() }
     
     if (data.startTime && data.duration) {
       updateData.startTime = data.startTime

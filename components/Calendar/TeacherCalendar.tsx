@@ -55,6 +55,25 @@ import {
   type CreateManualSlotData,
   type CreateTemplateData,
 } from "@/hooks/use-toast";
+// interface RawTimeSlotData {
+//   id: number;
+//   startTime: string;
+//   endTime: string;
+//   duration: number;
+//   isActive: boolean;
+//   source: string;
+//   bookings: RawBookingData[];
+// }
+
+// interface RawBookingData {
+//   id: number;
+//   status: string;
+//   student: {
+//     id: number;
+//     username?: string;
+//     email?: string;
+//   };
+// }
 
 const weekDays = [
   { value: 0, label: "Domenica" },
@@ -99,34 +118,35 @@ export default function TeacherAvailabilityCalendar() {
     }
   }, [date]);
 
-  const loadTimeSlots = async (selectedDate: Date) => {
-    try {
-      setLoading(true);
-      const result = await getTeacherTimeSlotsForDate(selectedDate);
+const loadTimeSlots = async (selectedDate: Date) => {
+  try {
+    setLoading(true);
+    const result = await getTeacherTimeSlotsForDate(selectedDate);
 
-      if (result.success && result.data) {
-        setTimeSlots(
-          result.data.map((slot: any) => ({
-            ...slot,
-            bookings: slot.bookings.map((booking: any) => ({
-              ...booking,
-              student: {
-                ...booking.student,
-                email: booking.student.email ?? "",
-              },
-            })),
-          }))
-        );
-      } else {
-
-        toast("Errore nel caricamento dello slot");
-      }
-    } catch {
-      toast("Errore nel caricamento dei time slots");
-    } finally {
-      setLoading(false);
+    if (result.success && result.data) {
+      // Semplicemente usa i dati così come arrivano dal server
+      // TypeScript inferirà automaticamente i tipi corretti
+      setTimeSlots(
+        result.data.map((slot) => ({
+          ...slot,
+          bookings: slot.bookings.map((booking) => ({
+            ...booking,
+            student: {
+              ...booking.student,
+              email: booking.student.email ?? "",
+            },
+          })),
+        }))
+      );
+    } else {
+      toast("Errore nel caricamento dello slot");
     }
-  };
+  } catch {
+    toast("Errore nel caricamento dei time slots");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Utility functions
   const calculateEndTime = (startTime: string, duration: number) => {
