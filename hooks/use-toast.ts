@@ -41,9 +41,15 @@ export interface TimeSlotWithBookings {
     student: {
       id: string
       username: string | null
-      email: string
+       email: string | null
     }
   }[]
+}
+
+// NUOVA: Tipo per i dati di disponibilità del mese
+export interface MonthAvailabilityData {
+  daysWithAvailability: string[] // Array di date in formato YYYY-MM-DD
+  allTimeSlots: { [dateKey: string]: TimeSlotWithBookings[] } // Tutti gli slot raggruppati per data
 }
 
 // === UTILITIES ===
@@ -99,6 +105,80 @@ async function getAuthenticatedTeacher() {
 }
 
 // === READ OPERATIONS ===
+
+// NUOVA: Funzione ottimizzata per caricare tutti i dati di un mese
+export async function getTeacherMonthAvailability(year: number, month: number, teacherId?: string): Promise<{ success: boolean; data?: MonthAvailabilityData; error?: string }> {
+  const currentTeacherId = teacherId || await getAuthenticatedTeacher()
+  
+  try {
+    // Calcola il primo e ultimo giorno del mese
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    
+    // Una sola query per tutti gli slot del mese
+    const timeSlots = await prisma.timeSlot.findMany({
+      where: {
+        teacherId: currentTeacherId,
+        date: {
+          gte: firstDay,
+          lte: lastDay
+        }
+      },
+      include: {
+        bookings: {
+          where: {
+            status: {
+              not: "CANCELLED"
+            }
+          },
+          include: {
+            student: {
+              select: {
+                id: true,
+                username: true,
+                email: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { date: "asc" },
+        { startTime: "asc" }
+      ]
+    })
+    
+    // Raggruppa gli slot per data
+    const slotsByDate: { [dateKey: string]: TimeSlotWithBookings[] } = {}
+    const daysWithAvailability: Set<string> = new Set()
+    
+    timeSlots.forEach(slot => {
+      const dateKey = slot.date.toISOString().split('T')[0] // YYYY-MM-DD
+      
+      if (!slotsByDate[dateKey]) {
+        slotsByDate[dateKey] = []
+      }
+      slotsByDate[dateKey].push(slot)
+      
+      // Controlla se il giorno ha slot disponibili (attivi e non prenotati)
+      const hasAvailableSlots = slot.isActive && !slot.bookings.some(booking => booking.status !== "CANCELLED")
+      if (hasAvailableSlots) {
+        daysWithAvailability.add(dateKey)
+      }
+    })
+    
+    return {
+      success: true,
+      data: {
+        daysWithAvailability: Array.from(daysWithAvailability),
+        allTimeSlots: slotsByDate
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching month availability:", error)
+    return { success: false, error: "Errore nel caricamento delle disponibilità del mese" }
+  }
+}
 
 export async function getTeacherTimeSlots(teacherId?: string) {
   const currentTeacherId = teacherId || await getAuthenticatedTeacher()
