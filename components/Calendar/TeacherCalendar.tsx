@@ -5,14 +5,14 @@ import { type DateRange } from "react-day-picker";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-// Import dei componenti estratti
-import { TimeSlotManager, type TimeSlot } from "./TimeSlotManger";
+// Import del nuovo componente TimeSlotGrid
+import { TimeSlotGrid, type TimeSlot, type ExistingTimeSlot } from "./TimeSlotGrid";
 import { ExistingTimeSlots } from "./ExistingTimeSlots";
 import { DateSelectionManager } from "./DateSelectionManager";
 import { TeacherAvailabilityHeader } from "./TeacherAvailabilityHeader";
 import { ModeSelector } from "./ModeSelector";
 
-// Import delle server actions
+// Import delle server actions - FIX: Importa dal file corretto
 import {
   getTeacherTimeSlotsForDate,
   getTeacherMonthAvailability,
@@ -24,14 +24,14 @@ import {
   type CreateManualSlotData,
   type CreateTemplateData,
   type MonthAvailabilityData,
-} from "@/hooks/use-toast";
+} from "@/hooks/use-toast"; // Aggiorna questo percorso
 
 export default function TeacherAvailabilityScheduler() {
   const [mode, setMode] = React.useState<"single" | "range">("single");
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
   const [selectedDays, setSelectedDays] = React.useState<number[]>([]);
-  const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([]);
+  const [selectedTimeSlots, setSelectedTimeSlots] = React.useState<TimeSlot[]>([]);
   const [templateName, setTemplateName] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   
@@ -40,7 +40,7 @@ export default function TeacherAvailabilityScheduler() {
   const [isLoadingAvailability, setIsLoadingAvailability] = React.useState(false);
   const [loadedMonths, setLoadedMonths] = React.useState<Set<string>>(new Set());
 
-  // Existing time slots for display
+  // FIX: Usa TimeSlotWithBookings invece di ExistingTimeSlot
   const [existingTimeSlots, setExistingTimeSlots] = React.useState<TimeSlotWithBookings[]>([]);
 
   // Funzione per ottenere la chiave del mese
@@ -85,18 +85,8 @@ export default function TeacherAvailabilityScheduler() {
       const result = await getTeacherTimeSlotsForDate(date);
 
       if (result.success && result.data) {
-        setExistingTimeSlots(
-          result.data.map((slot) => ({
-            ...slot,
-            bookings: slot.bookings.map((booking) => ({
-              ...booking,
-              student: {
-                ...booking.student,
-                email: booking.student.email ?? "",
-              },
-            })),
-          }))
-        );
+        // FIX: I dati sono già nel formato corretto TimeSlotWithBookings
+        setExistingTimeSlots(result.data);
       } else {
         toast("Errore nel caricamento dello slot");
       }
@@ -155,12 +145,12 @@ export default function TeacherAvailabilityScheduler() {
   };
 
   const handleCreateSingleAvailability = async () => {
-    if (!selectedDate || timeSlots.length === 0) return;
+    if (!selectedDate || selectedTimeSlots.length === 0) return;
 
     try {
       setLoading(true);
       
-      for (const slot of timeSlots) {
+      for (const slot of selectedTimeSlots) {
         const data: CreateManualSlotData = {
           date: selectedDate,
           startTime: slot.startTime,
@@ -176,7 +166,7 @@ export default function TeacherAvailabilityScheduler() {
       }
 
       toast("Disponibilità create con successo!");
-      setTimeSlots([]);
+      setSelectedTimeSlots([]);
       await refreshData(selectedDate);
       
     } catch {
@@ -189,7 +179,7 @@ export default function TeacherAvailabilityScheduler() {
   const handleCreateTemplateAvailability = async () => {
     const rangeDays = getDateRangeDays(dateRange);
     
-    if (!dateRange?.from || !dateRange?.to || selectedDays.length === 0 || timeSlots.length === 0 || !templateName.trim()) {
+    if (!dateRange?.from || !dateRange?.to || selectedDays.length === 0 || selectedTimeSlots.length === 0 || !templateName.trim()) {
       toast("Compila tutti i campi richiesti!");
       return;
     }
@@ -202,7 +192,7 @@ export default function TeacherAvailabilityScheduler() {
     try {
       setLoading(true);
       
-      for (const slot of timeSlots) {
+      for (const slot of selectedTimeSlots) {
         const data: CreateTemplateData = {
           name: `${templateName} - ${slot.startTime}`,
           weekDays: selectedDays,
@@ -222,7 +212,7 @@ export default function TeacherAvailabilityScheduler() {
       }
 
       toast("Template creato con successo!");
-      setTimeSlots([]);
+      setSelectedTimeSlots([]);
       setTemplateName("");
       setSelectedDays([]);
       setDateRange(undefined);
@@ -244,10 +234,10 @@ export default function TeacherAvailabilityScheduler() {
 
   const handleDeleteTimeSlot = async (timeSlotId: number) => {
     const timeSlot = existingTimeSlots.find((slot) => slot.id === timeSlotId);
-    const booking = timeSlot ? timeSlot.bookings.find((booking) => booking.status !== "CANCELLED") : null;
+    const hasActiveBooking = timeSlot?.bookings.some((booking) => booking.status !== "CANCELLED");
 
     if (
-      booking &&
+      hasActiveBooking &&
       !confirm(
         "Questo slot ha una prenotazione attiva. Vuoi davvero eliminarlo?"
       )
@@ -303,16 +293,16 @@ export default function TeacherAvailabilityScheduler() {
 
   const canProceed = () => {
     if (mode === "single") {
-      return selectedDate && timeSlots.length > 0;
+      return !!selectedDate && selectedTimeSlots.length > 0;
     } else {
       const rangeDays = getDateRangeDays(dateRange);
       return (
-        dateRange?.from && 
-        dateRange?.to && 
+        !!dateRange?.from && 
+        !!dateRange?.to && 
         rangeDays >= 7 &&
         selectedDays.length > 0 && 
-        timeSlots.length > 0 && 
-        templateName.trim()
+        selectedTimeSlots.length > 0 && 
+        !!templateName.trim()
       );
     }
   };
@@ -321,6 +311,26 @@ export default function TeacherAvailabilityScheduler() {
   const handleMonthChange = React.useCallback((month: Date) => {
     loadMonthAvailability(month);
   }, [loadMonthAvailability]);
+
+  // FIX: Funzione helper per convertire TimeSlotWithBookings a ExistingTimeSlot
+  const convertToExistingTimeSlot = React.useCallback((slot: TimeSlotWithBookings): ExistingTimeSlot => {
+    return {
+      id: slot.id,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      duration: slot.duration,
+      isActive: slot.isActive,
+      bookings: slot.bookings.map(booking => ({
+        id: booking.id,
+        status: booking.status,
+        student: {
+          id: booking.student.id,
+          username: booking.student.username || "",
+          email: booking.student.email || "",
+        },
+      })),
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -334,7 +344,7 @@ export default function TeacherAvailabilityScheduler() {
         {/* Tab Content */}
         <Tabs value={mode} onValueChange={(v) => setMode(v as "single" | "range")}>
           <TabsContent value="single" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Date Selection Component */}
               <DateSelectionManager
                 mode="single"
@@ -350,7 +360,7 @@ export default function TeacherAvailabilityScheduler() {
                 onMonthChange={handleMonthChange}
               />
 
-              {/* Existing Slots Component */}
+              {/* FIX: Existing Slots Component - usa direttamente TimeSlotWithBookings */}
               <ExistingTimeSlots
                 timeSlots={existingTimeSlots}
                 selectedDate={selectedDate}
@@ -359,6 +369,18 @@ export default function TeacherAvailabilityScheduler() {
                 onDeleteTimeSlot={handleDeleteTimeSlot}
               />
             </div>
+
+            {/* TimeSlotGrid per modalità singola */}
+            <TimeSlotGrid
+              selectedSlots={selectedTimeSlots}
+              existingSlots={existingTimeSlots.map(convertToExistingTimeSlot)}
+              onSlotsChange={setSelectedTimeSlots}
+              onSubmit={handleCreateSingleAvailability}
+              submitLabel="Salva Disponibilità"
+              canSubmit={canProceed()}
+              isLoading={loading}
+              selectedDate={selectedDate}
+            />
           </TabsContent>
 
           <TabsContent value="range" className="space-y-6 mt-6">
@@ -376,19 +398,19 @@ export default function TeacherAvailabilityScheduler() {
               hasAvailability={hasAvailability}
               onMonthChange={handleMonthChange}
             />
+
+            {/* TimeSlotGrid per modalità template */}
+            <TimeSlotGrid
+              selectedSlots={selectedTimeSlots}
+              existingSlots={[]} // Non mostriamo slot esistenti per i template
+              onSlotsChange={setSelectedTimeSlots}
+              onSubmit={handleCreateTemplateAvailability}
+              submitLabel="Crea Template"
+              canSubmit={canProceed()}
+              isLoading={loading}
+            />
           </TabsContent>
         </Tabs>
-
-        {/* Time Slots Management */}
-        <TimeSlotManager
-          timeSlots={timeSlots}
-          onTimeSlotsChange={setTimeSlots}
-          onSubmit={mode === "single" ? handleCreateSingleAvailability : handleCreateTemplateAvailability}
-          submitLabel={mode === "single" ? "Crea Disponibilità" : "Crea Template"}
-          canSubmit={!!canProceed()}
-          isLoading={loading}
-          className="mb-8"
-        />
       </div>
     </div>
   );
