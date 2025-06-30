@@ -86,16 +86,20 @@ export function DateSelectionManager({
     return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
   };
 
-  if (mode === "single") {
-    // DEBUG: Log per capire il problema
-    console.log('DEBUG Calendar:', {
-      selectedDate,
-      calendarMonth,
-      today: new Date(),
-      june30: new Date(2025, 5, 30), // Giugno è mese 5 (0-indexed)
-      isJune30Disabled: new Date(2025, 5, 30) < new Date()
-    });
+  // FIX: Funzione helper per verificare se una data è disabilitata
+  const isDateDisabled = (date: Date): boolean => {
+    // Crea una nuova data per oggi senza ora
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Crea una nuova data per la data da controllare senza ora
+    const dateToCheck = new Date(date);
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    return dateToCheck < today;
+  };
 
+  if (mode === "single") {
     return (
       <Card className="lg:col-span-2">
         <CardHeader>
@@ -124,27 +128,7 @@ export function DateSelectionManager({
             }}
             numberOfMonths={2}
             className="rounded-lg border shadow-sm"
-            disabled={(date) => {
-              // FIX: Crea una nuova data per oggi senza ora
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              
-              // Crea una nuova data per la data da controllare senza ora
-              const dateToCheck = new Date(date);
-              dateToCheck.setHours(0, 0, 0, 0);
-              
-              const isDisabled = dateToCheck < today;
-              
-              if (date.getDate() === 30 && date.getMonth() === 5) {
-                console.log('DEBUG 30 giugno:', {
-                  date: date.toISOString(),
-                  today: today.toISOString(),
-                  dateToCheck: dateToCheck.toISOString(),
-                  isDisabled
-                });
-              }
-              return isDisabled;
-            }}
+            disabled={isDateDisabled}  // FIX: Usa la funzione helper
             showOutsideDays={false}
             modifiers={{
               hasAvailability: (date) => hasAvailability(date)
@@ -180,7 +164,7 @@ export function DateSelectionManager({
             onSelect={onDateRangeChange}
             numberOfMonths={2}
             className="rounded-lg border shadow-sm"
-            disabled={(date) => date < new Date()}
+            disabled={isDateDisabled}  // FIX: Usa la stessa logica del single mode
             showOutsideDays={false} 
             onMonthChange={onMonthChange}
           />
