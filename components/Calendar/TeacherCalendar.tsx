@@ -2,18 +2,15 @@
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Calendar as CalendarIcon,
-  Edit,
-  Repeat,
-} from "lucide-react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 // Import dei componenti estratti
 import { TimeSlotManager, type TimeSlot } from "./TimeSlotManger";
 import { ExistingTimeSlots } from "./ExistingTimeSlots";
 import { DateSelectionManager } from "./DateSelectionManager";
+import { TeacherAvailabilityHeader } from "./TeacherAvailabilityHeader";
+import { ModeSelector } from "./ModeSelector";
 
 // Import delle server actions
 import {
@@ -327,72 +324,20 @@ export default function TeacherAvailabilityScheduler() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CalendarIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Gestione Disponibilità Lezioni
-              </h1>
-              <p className="text-sm text-gray-600">
-                Crea le tue disponibilità per singole date o con template ricorrenti
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Header Component */}
+      <TeacherAvailabilityHeader />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Mode Selection */}
-        <div className="mb-8">
-          <Tabs value={mode} onValueChange={(v) => setMode(v as "single" | "range")}>
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="single" className="flex items-center gap-2">
-                <Edit className="w-4 h-4" />
-                Singola Data
-              </TabsTrigger>
-              <TabsTrigger value="range" className="flex items-center gap-2">
-                <Repeat className="w-4 h-4" />
-                Template Ricorrente
-              </TabsTrigger>
-            </TabsList>
+        {/* Mode Selection Component */}
+        <ModeSelector mode={mode} onModeChange={setMode} />
 
-            <TabsContent value="single" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Date Selection Component */}
-                <DateSelectionManager
-                  mode="single"
-                  selectedDate={selectedDate}
-                  onSelectedDateChange={setSelectedDate}
-                  dateRange={dateRange}
-                  onDateRangeChange={setDateRange}
-                  selectedDays={selectedDays}
-                  onSelectedDaysChange={setSelectedDays}
-                  templateName={templateName}
-                  onTemplateNameChange={setTemplateName}
-                  hasAvailability={hasAvailability}
-                  onMonthChange={handleMonthChange}
-                />
-
-                {/* Existing Slots Component */}
-                <ExistingTimeSlots
-                  timeSlots={existingTimeSlots}
-                  selectedDate={selectedDate}
-                  loading={loading}
-                  onToggleSlotActive={handleToggleSlotActive}
-                  onDeleteTimeSlot={handleDeleteTimeSlot}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="range" className="space-y-6 mt-6">
-              {/* Date Selection Component for Range Mode */}
+        {/* Tab Content */}
+        <Tabs value={mode} onValueChange={(v) => setMode(v as "single" | "range")}>
+          <TabsContent value="single" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Date Selection Component */}
               <DateSelectionManager
-                mode="range"
+                mode="single"
                 selectedDate={selectedDate}
                 onSelectedDateChange={setSelectedDate}
                 dateRange={dateRange}
@@ -404,9 +349,35 @@ export default function TeacherAvailabilityScheduler() {
                 hasAvailability={hasAvailability}
                 onMonthChange={handleMonthChange}
               />
-            </TabsContent>
-          </Tabs>
-        </div>
+
+              {/* Existing Slots Component */}
+              <ExistingTimeSlots
+                timeSlots={existingTimeSlots}
+                selectedDate={selectedDate}
+                loading={loading}
+                onToggleSlotActive={handleToggleSlotActive}
+                onDeleteTimeSlot={handleDeleteTimeSlot}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="range" className="space-y-6 mt-6">
+            {/* Date Selection Component for Range Mode */}
+            <DateSelectionManager
+              mode="range"
+              selectedDate={selectedDate}
+              onSelectedDateChange={setSelectedDate}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              selectedDays={selectedDays}
+              onSelectedDaysChange={setSelectedDays}
+              templateName={templateName}
+              onTemplateNameChange={setTemplateName}
+              hasAvailability={hasAvailability}
+              onMonthChange={handleMonthChange}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Time Slots Management */}
         <TimeSlotManager
