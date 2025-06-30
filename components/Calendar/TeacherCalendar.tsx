@@ -6,40 +6,33 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Clock,
   Check,
   X,
-  Plus,
   Calendar as CalendarIcon,
   Users,
   Repeat,
   Edit,
   Loader2,
-  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
+
+// Import del nuovo componente TimeSlotManager
+import { TimeSlotManager, type TimeSlot } from "./TimeSlotManger";
 
 // Import delle server actions (mantieni le tue esistenti)
 import {
   getTeacherTimeSlotsForDate,
-  getTeacherMonthAvailability, // NUOVO IMPORT
+  getTeacherMonthAvailability,
   createManualTimeSlot,
   createTemplateTimeSlots,
   deleteTimeSlot,
@@ -47,7 +40,7 @@ import {
   type TimeSlotWithBookings,
   type CreateManualSlotData,
   type CreateTemplateData,
-  type MonthAvailabilityData, // NUOVO IMPORT
+  type MonthAvailabilityData,
 } from "@/hooks/use-toast";
 
 const weekDays = [
@@ -65,59 +58,52 @@ export default function TeacherAvailabilityScheduler() {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
   const [selectedDays, setSelectedDays] = React.useState<number[]>([]);
-  const [timeSlots, setTimeSlots] = React.useState<Array<{
-    id: string;
-    startTime: string;
-    endTime: string;
-    duration: number;
-  }>>([]);
+  const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([]);
   const [templateName, setTemplateName] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   
   // Set to track days with availability
-const [monthAvailabilityCache, setMonthAvailabilityCache] = React.useState<Map<string, MonthAvailabilityData>>(new Map());
-const [isLoadingAvailability, setIsLoadingAvailability] = React.useState(false);
+  const [monthAvailabilityCache, setMonthAvailabilityCache] = React.useState<Map<string, MonthAvailabilityData>>(new Map());
+  const [isLoadingAvailability, setIsLoadingAvailability] = React.useState(false);
   const [loadedMonths, setLoadedMonths] = React.useState<Set<string>>(new Set());
 
-  
   // Existing time slots for display
   const [existingTimeSlots, setExistingTimeSlots] = React.useState<TimeSlotWithBookings[]>([]);
 
   // Funzione per ottenere la chiave del mese
-const getMonthKey = React.useCallback((date: Date): string => {
-  return `${date.getFullYear()}-${date.getMonth()}`;
-}, []);
+  const getMonthKey = React.useCallback((date: Date): string => {
+    return `${date.getFullYear()}-${date.getMonth()}`;
+  }, []);
 
   // Funzione per caricare i giorni con disponibilità per il mese visualizzato
-const loadMonthAvailability = React.useCallback(async (month: Date) => {
-  const monthKey = getMonthKey(month);
-  
-  // Usa loadedMonths per il controllo
-  if (monthAvailabilityCache.has(monthKey) || loadedMonths.has(monthKey) || isLoadingAvailability) {
-    return;
-  }
-
-  try {
-    setIsLoadingAvailability(true);
-    setLoadedMonths(prev => new Set(prev).add(monthKey)); // Aggiungi alla cache
+  const loadMonthAvailability = React.useCallback(async (month: Date) => {
+    const monthKey = getMonthKey(month);
     
-    const result = await getTeacherMonthAvailability(month.getFullYear(), month.getMonth());
-    
-    if (result.success && result.data) {
-      setMonthAvailabilityCache(prev => new Map(prev).set(monthKey, result.data!));
+    if (monthAvailabilityCache.has(monthKey) || loadedMonths.has(monthKey) || isLoadingAvailability) {
+      return;
     }
-    
-  } catch (error) {
-    console.error('Errore nel caricamento delle disponibilità del mese:', error);
-    setLoadedMonths(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(monthKey); // Rimuovi in caso di errore
-      return newSet;
-    });
-  } finally {
-    setIsLoadingAvailability(false);
-  }
-}, [monthAvailabilityCache, isLoadingAvailability, loadedMonths, getMonthKey]);
+
+    try {
+      setIsLoadingAvailability(true);
+      setLoadedMonths(prev => new Set(prev).add(monthKey));
+      
+      const result = await getTeacherMonthAvailability(month.getFullYear(), month.getMonth());
+      
+      if (result.success && result.data) {
+        setMonthAvailabilityCache(prev => new Map(prev).set(monthKey, result.data!));
+      }
+      
+    } catch (error) {
+      console.error('Errore nel caricamento delle disponibilità del mese:', error);
+      setLoadedMonths(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(monthKey);
+        return newSet;
+      });
+    } finally {
+      setIsLoadingAvailability(false);
+    }
+  }, [monthAvailabilityCache, isLoadingAvailability, loadedMonths, getMonthKey]);
 
   // Funzione per caricare gli slot di una data specifica
   const loadTimeSlots = React.useCallback(async (date: Date) => {
@@ -149,31 +135,30 @@ const loadMonthAvailability = React.useCallback(async (month: Date) => {
   }, []);
 
   // Funzione per ricaricare sia gli slot che le disponibilità del mese
-// Funzione per ricaricare sia gli slot che le disponibilità del mese
-const refreshData = React.useCallback(async (date: Date) => {
-  const monthKey = getMonthKey(date);
-  setMonthAvailabilityCache(prev => {
-    const newMap = new Map(prev);
-    newMap.delete(monthKey);
-    return newMap;
-  });
-  
-  await Promise.all([
-    loadTimeSlots(date),
-    loadMonthAvailability(date)
-  ]);
-}, [loadTimeSlots, loadMonthAvailability, getMonthKey]);
+  const refreshData = React.useCallback(async (date: Date) => {
+    const monthKey = getMonthKey(date);
+    setMonthAvailabilityCache(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(monthKey);
+      return newMap;
+    });
+    
+    await Promise.all([
+      loadTimeSlots(date),
+      loadMonthAvailability(date)
+    ]);
+  }, [loadTimeSlots, loadMonthAvailability, getMonthKey]);
 
-// Funzione per verificare se un giorno ha disponibilità
-const hasAvailability = React.useCallback((date: Date): boolean => {
-  const monthKey = getMonthKey(date);
-  const monthData = monthAvailabilityCache.get(monthKey);
-  
-  if (!monthData) return false;
-  
-  const dateString = date.toISOString().split('T')[0];
-  return monthData.daysWithAvailability.includes(dateString);
-}, [monthAvailabilityCache, getMonthKey]);
+  // Funzione per verificare se un giorno ha disponibilità
+  const hasAvailability = React.useCallback((date: Date): boolean => {
+    const monthKey = getMonthKey(date);
+    const monthData = monthAvailabilityCache.get(monthKey);
+    
+    if (!monthData) return false;
+    
+    const dateString = date.toISOString().split('T')[0];
+    return monthData.daysWithAvailability.includes(dateString);
+  }, [monthAvailabilityCache, getMonthKey]);
 
   // Load existing time slots when single date changes
   React.useEffect(() => {
@@ -183,23 +168,11 @@ const hasAvailability = React.useCallback((date: Date): boolean => {
   }, [selectedDate, mode, loadTimeSlots]);
 
   // Load availability for current month on mount
-React.useEffect(() => {
-  if (selectedDate) {
-    loadMonthAvailability(selectedDate);
-  }
-}, [selectedDate, loadMonthAvailability]);
-
-  const generateTimeOptions = () => {
-    const times = [];
-    for (let hour = 8; hour <= 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        times.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-      }
+  React.useEffect(() => {
+    if (selectedDate) {
+      loadMonthAvailability(selectedDate);
     }
-    return times;
-  };
-
-  const timeOptions = generateTimeOptions();
+  }, [selectedDate, loadMonthAvailability]);
 
   const toggleDay = (dayValue: number) => {
     setSelectedDays(prev => 
@@ -209,50 +182,11 @@ React.useEffect(() => {
     );
   };
 
-  const addTimeSlot = () => {
-    const newSlot = {
-      id: Date.now().toString(),
-      startTime: '09:00',
-      endTime: '10:00',
-      duration: 60
-    };
-    setTimeSlots([...timeSlots, newSlot]);
-  };
-
   // Questa funzione calcola il numero di giorni tra due date, inclusi entrambi i giorni
   const getDateRangeDays = (dateRange: DateRange | undefined): number => {
     if (!dateRange?.from || !dateRange?.to) return 0;
     const timeDiff = dateRange.to.getTime() - dateRange.from.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 per includere entrambi i giorni
-  };
-
-  const updateTimeSlot = (id: string, field: string, value: string) => {
-    setTimeSlots(prev => prev.map(slot => {
-      if (slot.id === id) {
-        const updated = { ...slot, [field]: value };
-        
-        // Calculate duration when times change
-        if (field === 'startTime' || field === 'endTime') {
-          const start = field === 'startTime' ? value : slot.startTime;
-          const end = field === 'endTime' ? value : slot.endTime;
-          const duration = calculateDuration(start, end);
-          updated.duration = duration;
-        }
-        
-        return updated;
-      }
-      return slot;
-    }));
-  };
-
-  const calculateDuration = (startTime: string, endTime: string): number => {
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
-  };
-
-  const removeTimeSlot = (id: string) => {
-    setTimeSlots(prev => prev.filter(slot => slot.id !== id));
+    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
   };
 
   const handleCreateSingleAvailability = async () => {
@@ -329,8 +263,8 @@ React.useEffect(() => {
       setDateRange(undefined);
       
       // Invalida la cache per tutti i mesi nel range per mostrare le nuove disponibilità
-setLoadedMonths(new Set());
-setMonthAvailabilityCache(new Map()); // Reset della cache invece
+      setLoadedMonths(new Set());
+      setMonthAvailabilityCache(new Map());
       
     } catch (error) {
       toast(
@@ -414,7 +348,7 @@ setMonthAvailabilityCache(new Map()); // Reset della cache invece
       return (
         dateRange?.from && 
         dateRange?.to && 
-        rangeDays >= 7 && // Minimo 7 giorni
+        rangeDays >= 7 &&
         selectedDays.length > 0 && 
         timeSlots.length > 0 && 
         templateName.trim()
@@ -431,9 +365,9 @@ setMonthAvailabilityCache(new Map()); // Reset della cache invece
   ).length;
 
   // Gestione del cambio mese nel calendario
-const handleMonthChange = React.useCallback((month: Date) => {
-  loadMonthAvailability(month);
-}, [loadMonthAvailability]);
+  const handleMonthChange = React.useCallback((month: Date) => {
+    loadMonthAvailability(month);
+  }, [loadMonthAvailability]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -633,7 +567,7 @@ const handleMonthChange = React.useCallback((month: Date) => {
                       className="rounded-lg border shadow-sm"
                       disabled={(date) => date < new Date()}
                       showOutsideDays={false} 
-                        onMonthChange={handleMonthChange}
+                      onMonthChange={handleMonthChange}
                     />
                   </CardContent>
                 </Card>
@@ -706,92 +640,15 @@ const handleMonthChange = React.useCallback((month: Date) => {
         </div>
 
         {/* Time Slots Management */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
-                Orari Disponibili
-              </CardTitle>
-              <Button onClick={addTimeSlot} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Aggiungi Orario
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {timeSlots.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Nessun orario selezionato</p>
-                <p className="text-sm">Clicca Aggiungi Orario per iniziare</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {timeSlots.map(slot => (
-                  <div key={slot.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Select
-                        value={slot.startTime}
-                        onValueChange={(value) => updateTimeSlot(slot.id, 'startTime', value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeOptions.map(time => (
-                            <SelectItem key={time} value={time}>{time}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <ArrowRight className="w-4 h-4 text-gray-400" />
-                      
-                      <Select
-                        value={slot.endTime}
-                        onValueChange={(value) => updateTimeSlot(slot.id, 'endTime', value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeOptions.map(time => (
-                            <SelectItem key={time} value={time}>{time}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Badge variant="outline" className="ml-2">
-                        {slot.duration} min
-                      </Badge>
-                    </div>
-                    
-                    <Button
-                      onClick={() => removeTimeSlot(slot.id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-500 hover:bg-red-50"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button
-              onClick={mode === "single" ? handleCreateSingleAvailability : handleCreateTemplateAvailability}
-              disabled={!canProceed() || loading}
-              className="w-full"
-              size="lg"
-            >
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Check className="w-5 h-5 mr-2" />
-              {mode === "single" ? "Crea Disponibilità" : "Crea Template"}
-            </Button>
-          </CardFooter>
-        </Card>
+        <TimeSlotManager
+          timeSlots={timeSlots}
+          onTimeSlotsChange={setTimeSlots}
+          onSubmit={mode === "single" ? handleCreateSingleAvailability : handleCreateTemplateAvailability}
+          submitLabel={mode === "single" ? "Crea Disponibilità" : "Crea Template"}
+          canSubmit={!!canProceed()}
+          isLoading={loading}
+          className="mb-8"
+        />
       </div>
     </div>
   );
