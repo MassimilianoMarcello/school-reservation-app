@@ -54,12 +54,30 @@ export function DateSelectionManager({
   hasAvailability,
   onMonthChange,
 }: DateSelectionManagerProps) {
+  // FIX: Aggiungi stato per controllare il mese del calendario
+  const [calendarMonth, setCalendarMonth] = React.useState<Date>(() => 
+    selectedDate || new Date()
+  );
+
+  // FIX: Aggiorna il mese del calendario quando cambia la data selezionata
+  React.useEffect(() => {
+    if (selectedDate) {
+      setCalendarMonth(selectedDate);
+    }
+  }, [selectedDate]);
+
   const toggleDay = (dayValue: number) => {
     const newSelectedDays = selectedDays.includes(dayValue) 
       ? selectedDays.filter(val => val !== dayValue)
       : [...selectedDays, dayValue];
     onSelectedDaysChange(newSelectedDays);
   };
+
+  // FIX: Gestisci il cambio mese del calendario
+  const handleMonthChange = React.useCallback((month: Date) => {
+    setCalendarMonth(month);
+    onMonthChange(month);
+  }, [onMonthChange]);
 
   // Calcola il numero di giorni tra due date, inclusi entrambi i giorni
   const getDateRangeDays = (dateRange: DateRange | undefined): number => {
@@ -69,35 +87,75 @@ export function DateSelectionManager({
   };
 
   if (mode === "single") {
+    // DEBUG: Log per capire il problema
+    console.log('DEBUG Calendar:', {
+      selectedDate,
+      calendarMonth,
+      today: new Date(),
+      june30: new Date(2025, 5, 30), // Giugno è mese 5 (0-indexed)
+      isJune30Disabled: new Date(2025, 5, 30) < new Date()
+    });
+
     return (
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-blue-600" />
             Seleziona Data
+            {/* DEBUG: Mostra date correnti */}
+            <span className="text-xs text-gray-500">
+              (Oggi: {new Date().toLocaleDateString('it-IT')}, 
+               Selezionata: {selectedDate?.toLocaleDateString('it-IT') || 'Nessuna'})
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={onSelectedDateChange}
-            defaultMonth={selectedDate}
+            onSelect={(date) => {
+              console.log('Calendar onSelect chiamato con:', date);
+              onSelectedDateChange(date);
+            }}
+            month={calendarMonth}
+            onMonthChange={(month) => {
+              console.log('Calendar onMonthChange chiamato con:', month);
+              handleMonthChange(month);
+            }}
             numberOfMonths={2}
             className="rounded-lg border shadow-sm"
-            disabled={(date) => date < new Date()}
+            disabled={(date) => {
+              // FIX: Crea una nuova data per oggi senza ora
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              // Crea una nuova data per la data da controllare senza ora
+              const dateToCheck = new Date(date);
+              dateToCheck.setHours(0, 0, 0, 0);
+              
+              const isDisabled = dateToCheck < today;
+              
+              if (date.getDate() === 30 && date.getMonth() === 5) {
+                console.log('DEBUG 30 giugno:', {
+                  date: date.toISOString(),
+                  today: today.toISOString(),
+                  dateToCheck: dateToCheck.toISOString(),
+                  isDisabled
+                });
+              }
+              return isDisabled;
+            }}
             showOutsideDays={false}
             modifiers={{
               hasAvailability: (date) => hasAvailability(date)
             }}
             modifiersStyles={{
               hasAvailability: {
-                backgroundColor: '#dcfce7', // bg-green-100
-                color: '#166534', // text-green-800
+                backgroundColor: '#dcfce7',
+                color: '#166534',
                 fontWeight: '500'
               }
             }}
-            onMonthChange={onMonthChange}
           />
         </CardContent>
       </Card>
