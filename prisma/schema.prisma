@@ -4,6 +4,9 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,7 +21,7 @@ model User {
   username           String?
   email              String?   @unique
   password           String?
-   image              String?
+  image              String?
   emailVerified      DateTime? @map("email_verified")
   profileComplete    Boolean   @default(false)
   tempOtpSecret     String? // Segreto temporaneo per l'autenticazione a due fattori
@@ -40,6 +43,10 @@ model User {
   // Nuove relazioni per studenti
   studentBookings    Booking[]       @relation("StudentBookings")
   purchases          Purchase[]      @relation("StudentPurchases")
+  
+  // Relazioni per i profili separati
+  teacherProfile     TeacherProfile? @relation("TeacherProfile")
+  studentProfile     StudentProfile? @relation("StudentProfile")
 }
 
 enum Role {
@@ -100,9 +107,118 @@ enum TokenType {
   RESET_2FA
 }
 
-// === NUOVI MODELLI PER IL SISTEMA DI LEZIONI ===
+// === PROFILI SEPARATI ===
 
-// Pacchetti che l'insegnante mette in vendita
+model TeacherProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation("TeacherProfile", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informazioni professionali
+  title            String?  // "Insegnante di Italiano certificato"
+  bio              String?  // Descrizione lunga
+  experience       String?  // Anni di esperienza, certificazioni
+  education        String?  // Formazione
+  
+  // Lingue insegnate
+  nativeLanguages  String[] // ["Italian"]
+  teachingLanguages String[] // ["Italian", "English"]
+  spokenLanguages   String[] // con livelli: ["English-C2", "Spanish-B1"]
+  
+  // Prezzi e disponibilità
+  hourlyRate       Decimal? @db.Decimal(10,2) // prezzo base per ora
+  trialLessonRate  Decimal? @db.Decimal(10,2) // prezzo lezione di prova
+  timezone         String?  // "Europe/Rome"
+  
+  // Statistiche e valutazioni
+  totalLessons     Int      @default(0)
+  avgRating        Decimal? @db.Decimal(3,2) // 4.85
+  totalReviews     Int      @default(0)
+  
+  // Stato del profilo
+  isVerified       Boolean  @default(false)
+  isAvailable      Boolean  @default(true)
+  profileVideo     String?  // URL video di presentazione
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  reviews          Review[]
+  specialties      TeachingSpecialty[]
+}
+
+model StudentProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation("StudentProfile", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informazioni di apprendimento
+  nativeLanguage    String?  // "English"
+  learningLanguages String[] // ["Italian", "Spanish"]
+  currentLevel      String?  // "Beginner", "Intermediate", "Advanced"
+  learningGoals     String[] // ["Travel", "Business", "Exam"]
+  
+  // Preferenze
+  timezone          String?  // "America/New_York"
+  preferredSchedule String?  // "Evenings", "Weekends"
+  
+  // Statistiche
+  totalLessons      Int      @default(0)
+  joinedAt          DateTime @default(now())
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  reviews           Review[] @relation("StudentReviews")
+}
+
+model TeachingSpecialty {
+  id          Int            @id @default(autoincrement())
+  teacherId   String
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  category    SpecialtyType
+  name        String         // "Business Italian", "Conversation"
+  description String?
+  
+  @@index([teacherId])
+}
+
+enum SpecialtyType {
+  CONVERSATION
+  BUSINESS
+  EXAM_PREP
+  GRAMMAR
+  PRONUNCIATION
+  WRITING
+  BEGINNERS
+  ADVANCED
+}
+
+// === SISTEMA DI RECENSIONI ===
+
+model Review {
+  id         Int            @id @default(autoincrement())
+  studentId  String
+  teacherId  String
+  bookingId  Int?           @unique // collegata a una lezione specifica
+  
+  student    StudentProfile @relation("StudentReviews", fields: [studentId], references: [id])
+  teacher    TeacherProfile @relation(fields: [teacherId], references: [id])
+  booking    Booking?       @relation(fields: [bookingId], references: [id])
+  
+  rating     Int            // 1-5 stelle
+  comment    String?
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  
+  @@index([teacherId])
+  @@index([studentId])
+}
+
+// === SISTEMA DI LEZIONI (ESISTENTE) ===
+
 model LessonPackage {
   id          Int     @id @default(autoincrement())
   teacherId   String
@@ -112,7 +228,7 @@ model LessonPackage {
   description String?
   lessonCount Int     // quante lezioni include (1 per singola, 5 per pacchetto)
   duration    Int     // durata di ogni lezione in minuti (30, 60, etc.)
-  price       Decimal // prezzo totale del pacchetto
+  price       Decimal @db.Decimal(10,2) // prezzo totale del pacchetto
   isActive    Boolean @default(true)
   
   createdAt   DateTime @default(now())
@@ -121,7 +237,6 @@ model LessonPackage {
   purchases   Purchase[]
 }
 
-// Acquisti effettuati dagli studenti
 model Purchase {
   id               Int           @id @default(autoincrement())
   studentId        String
@@ -144,7 +259,6 @@ model Purchase {
   @@index([studentId, teacherId])
 }
 
-// Slot temporali disponibili creati dall'insegnante
 model TimeSlot {
   id        Int      @id @default(autoincrement())
   teacherId String
@@ -167,12 +281,12 @@ model TimeSlot {
   @@unique([teacherId, date, startTime, endTime])
   @@index([teacherId, date])
 }
+
 enum SlotSource {
   MANUAL      
   TEMPLATE    
 }
 
-// Prenotazioni: collegano Purchase + TimeSlot
 model Booking {
   id         Int      @id @default(autoincrement())
   studentId  String
@@ -189,6 +303,7 @@ model Booking {
   student    User     @relation("StudentBookings", fields: [studentId], references: [id])
   teacher    User     @relation("TeacherBookings", fields: [teacherId], references: [id])
   purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  review     Review?
   
   @@index([studentId])
   @@index([teacherId])
