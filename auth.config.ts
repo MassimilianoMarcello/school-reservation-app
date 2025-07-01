@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
@@ -45,8 +46,7 @@ const config: NextAuthConfig = {
           email: user.email,
           username: user.username ?? undefined,
           role: user.role ?? "USER",
-          isTwoFactorEnabled: user.isTwoFactorEnabled ?? false,
-          twoFactorPass: user.twoFactorPass ?? false,
+       
         };
       },
     }),
@@ -71,15 +71,15 @@ const config: NextAuthConfig = {
     },
 
     async session({ session, token }) {
-      if (session.user && token) {
-        session.user.id = token.id;
-        session.user.email = token.email;
-          session.user.username = token.username; 
-        session.user.role = token.role;
-        session.user.isOAuthUser = token.isOAuthUser;
-      }
-      return session;
-    },
+  if (session.user && token) {
+    session.user.id = token.id as string;
+    session.user.email = token.email as string;
+    session.user.username = typeof token.username === 'string' ? token.username : undefined;
+    session.user.role = token.role as Role;
+    session.user.isOAuthUser = typeof token.isOAuthUser === 'boolean' ? token.isOAuthUser : undefined;
+  }
+  return session;
+},
   },
 };
 
