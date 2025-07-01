@@ -1,11 +1,18 @@
-// app/teacher/[id]/page.tsx
+// app/(fromstudent-to)/teacher-profile/[id]/page.tsx
 import { prisma } from "@/lib/prisma"; // adatta il path
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-export default async function TeacherProfilePage({ params }: { params: { id: string } }) {
+export default async function TeacherProfilePage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  // Await the params Promise
+  const { id } = await params;
+  
   const teacher = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       username: true,
       email: true,
