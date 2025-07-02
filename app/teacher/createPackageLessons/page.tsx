@@ -5,7 +5,7 @@ const CreatePackages = async () => {
     const session = await auth();
   return (
     <div>
-      <CreatePackageForm teacherId={session?.user?.id} />
+      <CreatePackageForm teacherId={session?.user?.id ?? ''} />
      
     </div>
   )
