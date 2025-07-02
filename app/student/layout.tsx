@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { NavigationMenuDemo as TeacherNavbar } from "@/components/Navbar/TeacherNavbar";
 import { NavigationMenuDemo as StudentNavbar } from "@/components/Navbar/StudentNavbar";
-
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
@@ -26,15 +25,16 @@ export default async function UserLayout({
   }
 
   // Se il ruolo non è TEACHER, redirect
-  if (session.user.role !== "TEACHER") {
-    redirect("/unauthorized"); // oppure /dashboard o qualsiasi altra pagina
-  }
+//   if (session.user.role !== "TEACHER") {
+//     redirect("/unauthorized"); // oppure /dashboard o qualsiasi altra pagina
+//   }
 
   return (
     <div>
       <h1>Hi {session?.user?.username}, teacher</h1>
       <TeacherNavbar />
-       <StudentNavbar />
+      <StudentNavbar />
+    
       <main>{children}</main>
     </div>
   );

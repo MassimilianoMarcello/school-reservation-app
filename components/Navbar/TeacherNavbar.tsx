@@ -3,7 +3,6 @@
 import * as React from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -20,27 +19,43 @@ export function NavigationMenuDemo() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="/teacher/createPackageLessons">Create Lessons Packages</Link>
+          <NavigationMenuLink asChild>
+            <Link href="/teacher/createPackageLessons" className={navigationMenuTriggerStyle()}>
+              Create Lessons Packages
+            </Link>
           </NavigationMenuLink>
-        </NavigationMenuItem> 
+        </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="/teacher/calendar">Calendar</Link>
+          <NavigationMenuLink asChild>
+            <Link href="/teacher/teacher-profile-form" className={navigationMenuTriggerStyle()}>
+              Create Profile
+            </Link>
           </NavigationMenuLink>
-        </NavigationMenuItem> 
+        </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="/docs">Reservations</Link>
+          <NavigationMenuLink asChild>
+            <Link href="/teacher/calendar" className={navigationMenuTriggerStyle()}>
+              Calendar
+            </Link>
           </NavigationMenuLink>
-        </NavigationMenuItem> 
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link href="/teacher/profile" className={navigationMenuTriggerStyle()}>
+              Profile
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
 
         {teacherId && (
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-              <Link href={`/teacher/${teacherId}`}>Packages List</Link>
+            <NavigationMenuLink asChild>
+              <Link href={`/teacher/${teacherId}`} className={navigationMenuTriggerStyle()}>
+                Packages List
+              </Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
         )}
@@ -48,5 +63,10 @@ export function NavigationMenuDemo() {
     </NavigationMenu>
   )
 }
+
+
+
+
+
 
 

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { TeacherPackagesClient } from "@/components/Teacher/teacherPackagesList";
 
+
 interface PageProps {
   params: Promise<{
     teacherId: string;
@@ -75,9 +76,15 @@ export default async function TeacherPackagesPage({ params }: PageProps) {
 
   if (!teacher) {
     notFound();
+    return null;
   }
 
-  return <TeacherPackagesClient teacher={teacher} isOwner={isOwner} />;
+  return (
+  
+      <TeacherPackagesClient teacher={teacher} isOwner={isOwner} />
+  
+    
+  );
 }
 
 export async function generateMetadata({ params }: PageProps) {

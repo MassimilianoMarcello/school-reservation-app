@@ -1,5 +1,5 @@
-// app/teacher/profile/page.tsx
-import { redirect } from "next/navigation"
+// app/profile/teacher/[id]/page.tsx
+import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import {
   Globe, 
   BookOpen, 
   Award, 
- 
+  MessageCircle,
   Video,
   Edit,
   Languages,
@@ -25,11 +25,12 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import Link from "next/link"
 
-// Fetch current teacher's profile from database
-async function getCurrentTeacherProfile(userId: string) {
+// Fetch teacher data from database
+async function getTeacherProfile(profileId: string) {
   try {
-    const teacherProfile = await prisma.teacherProfile.findUnique({
-      where: { userId },
+    // First, try to find by profile ID
+    let teacherProfile = await prisma.teacherProfile.findUnique({
+      where: { id: profileId },
       include: {
         user: {
           select: {
@@ -61,6 +62,43 @@ async function getCurrentTeacherProfile(userId: string) {
         }
       }
     })
+
+    // If not found by profile ID, try by user ID (for backward compatibility)
+    if (!teacherProfile) {
+      teacherProfile = await prisma.teacherProfile.findUnique({
+        where: { userId: profileId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              image: true,
+              role: true
+            }
+          },
+          specialties: true,
+          reviews: {
+            include: {
+              student: {
+                include: {
+                  user: {
+                    select: {
+                      username: true,
+                      image: true
+                    }
+                  }
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 10
+          }
+        }
+      })
+    }
 
     return teacherProfile
   } catch (error) {
@@ -105,28 +143,22 @@ function getUserInitials(username: string | null) {
   return username.split('_').map(part => part[0]).join('').toUpperCase().slice(0, 2)
 }
 
-export default async function TeacherProfilePage() {
-  // Get current session
+export default async function TeacherProfilePage({ params }: { params: { id: string } }) {
+  // Validate that the ID parameter exists
+  if (!params.id) {
+    console.error("No ID parameter provided")
+    notFound()
+  }
+
   const session = await auth()
-  
-  // Check if user is authenticated
-  if (!session?.user?.id) {
-    redirect("/auth/signin")
-  }
+  const teacherProfile = await getTeacherProfile(params.id)
 
-  // Check if user has teacher role
-  if (session.user.role !== "TEACHER") {
-    redirect("/unauthorized")
-  }
-
-  const userId = session.user.id
-  const teacherProfile = await getCurrentTeacherProfile(userId)
-
-  // If no teacher profile exists, redirect to create one
   if (!teacherProfile) {
-    redirect("/teacher/profile/create")
+    console.error("Teacher profile not found for ID:", params.id)
+    notFound()
   }
 
+  const isOwnProfile = session?.user?.id === teacherProfile.userId
   const avgRatingNumber = teacherProfile.avgRating ? Number(teacherProfile.avgRating) : 0
 
   return (
@@ -188,20 +220,25 @@ export default async function TeacherProfilePage() {
                   {teacherProfile.isAvailable ? "Disponibile" : "Non disponibile"}
                 </Badge>
                 
-                {/* Always show edit button since this is the teacher's own profile */}
-                <Button asChild variant="outline">
-                  <Link href={`/teacher/profile/edit`}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Modifica Profilo
-                  </Link>
-                </Button>
-                
-                <Button asChild variant="outline">
-                  <Link href={`/profile/teacher/${teacherProfile.id}`}>
-                    <Video className="w-4 h-4 mr-2" />
-                    Visualizza Profilo Pubblico
-                  </Link>
-                </Button>
+                {isOwnProfile ? (
+                  <Button asChild variant="outline">
+                    <Link href={`/profile/teacher/edit/${teacherProfile.id}`}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Modifica Profilo
+                    </Link>
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button>
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Prenota Lezione
+                    </Button>
+                    <Button variant="outline">
+                      <Video className="w-4 h-4 mr-2" />
+                      Lezione di Prova
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Languages */}
@@ -213,13 +250,9 @@ export default async function TeacherProfilePage() {
                       Lingue Madrelingua
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {teacherProfile.nativeLanguages?.length > 0 ? (
-                        teacherProfile.nativeLanguages.map((lang) => (
-                          <Badge key={lang} variant="default">{lang}</Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground">Nessuna lingua specificata</span>
-                      )}
+                      {teacherProfile.nativeLanguages?.map((lang) => (
+                        <Badge key={lang} variant="default">{lang}</Badge>
+                      )) || <span className="text-muted-foreground">Nessuna lingua specificata</span>}
                     </div>
                   </div>
                   
@@ -229,13 +262,9 @@ export default async function TeacherProfilePage() {
                       Lingue Insegnate
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {teacherProfile.teachingLanguages?.length > 0 ? (
-                        teacherProfile.teachingLanguages.map((lang) => (
-                          <Badge key={lang} variant="secondary">{lang}</Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground">Nessuna lingua specificata</span>
-                      )}
+                      {teacherProfile.teachingLanguages?.map((lang) => (
+                        <Badge key={lang} variant="secondary">{lang}</Badge>
+                      )) || <span className="text-muted-foreground">Nessuna lingua specificata</span>}
                     </div>
                   </div>
                 </div>
@@ -280,7 +309,7 @@ export default async function TeacherProfilePage() {
 
         {/* About Tab */}
         <TabsContent value="about" className="space-y-6">
-          {teacherProfile.bio ? (
+          {teacherProfile.bio && (
             <Card>
               <CardHeader>
                 <CardTitle>Biografia</CardTitle>
@@ -291,22 +320,10 @@ export default async function TeacherProfilePage() {
                 </p>
               </CardContent>
             </Card>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground mb-4">Non hai ancora aggiunto una biografia</p>
-                <Button asChild>
-                  <Link href="/teacher/profile/edit">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Aggiungi Biografia
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {teacherProfile.experience ? (
+            {teacherProfile.experience && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -320,24 +337,9 @@ export default async function TeacherProfilePage() {
                   </p>
                 </CardContent>
               </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5" />
-                    Esperienza
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center py-4">
-                  <p className="text-muted-foreground mb-4">Nessuna esperienza indicata</p>
-                  <Button asChild size="sm">
-                    <Link href="/teacher/profile/edit">Aggiungi</Link>
-                  </Button>
-                </CardContent>
-              </Card>
             )}
 
-            {teacherProfile.education ? (
+            {teacherProfile.education && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -349,21 +351,6 @@ export default async function TeacherProfilePage() {
                   <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {teacherProfile.education}
                   </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5" />
-                    Formazione
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center py-4">
-                  <p className="text-muted-foreground mb-4">Nessuna formazione indicata</p>
-                  <Button asChild size="sm">
-                    <Link href="/teacher/profile/edit">Aggiungi</Link>
-                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -393,13 +380,7 @@ export default async function TeacherProfilePage() {
           {(!teacherProfile.specialties || teacherProfile.specialties.length === 0) && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-muted-foreground mb-4">Nessuna specializzazione indicata</p>
-                <Button asChild>
-                  <Link href="/teacher/profile/edit">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Aggiungi Specializzazioni
-                  </Link>
-                </Button>
+                <p className="text-muted-foreground">Nessuna specializzazione indicata</p>
               </CardContent>
             </Card>
           )}
@@ -462,21 +443,23 @@ export default async function TeacherProfilePage() {
         <TabsContent value="schedule">
           <Card>
             <CardHeader>
-              <CardTitle>I Tuoi Orari</CardTitle>
+              <CardTitle>Orari Disponibili</CardTitle>
               <CardDescription>
-                Gestisci i tuoi orari disponibili per le lezioni
+                Visualizza e prenota gli orari disponibili per le lezioni
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground mb-4">
-                  Il calendario per gestire i tuoi orari sarà disponibile qui
+                  Il calendario degli orari sarà disponibile qui
                 </p>
-                <Button>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Gestisci Orari
-                </Button>
+                {!isOwnProfile && (
+                  <Button>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Prenota una lezione
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

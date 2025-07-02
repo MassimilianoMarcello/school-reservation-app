@@ -153,3 +153,50 @@ export const lessonPackageSchema = z.object({
 
 // Tipo inferito dallo schema
 export type LessonPackageInput = z.infer<typeof lessonPackageSchema>;
+
+
+// schemi di profilo
+
+// Opzioni predefinite per le lingue
+export const LANGUAGES = [
+  "Italian", "English", "Spanish", "French", "German", "Portuguese", 
+  "Russian", "Chinese", "Japanese", "Korean", "Arabic", "Dutch", 
+  "Swedish", "Polish", "Turkish", "Hindi"
+] as const
+
+export const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const
+
+export const LEARNING_GOALS = [
+  "Travel", "Business", "Exam", "Conversation", "Academic", "Personal Interest"
+] as const
+
+export const TIMEZONES = [
+  "Europe/Rome", "Europe/London", "America/New_York", "America/Los_Angeles",
+  "Asia/Tokyo", "Australia/Sydney", "Europe/Berlin", "Europe/Madrid"
+] as const
+
+// Schema per TeacherProfile
+export const teacherProfileSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100, "Title too long"),
+  bio: z.string().min(10, "Bio must be at least 10 characters").max(1000, "Bio too long"),
+  nativeLanguages: z.array(z.string()).min(1, "Select at least one native language"),
+  teachingLanguages: z.array(z.string()).min(1, "Select at least one teaching language"),
+  hourlyRate: z.coerce.number().min(5, "Minimum rate is $5").max(200, "Maximum rate is $200"),
+  trialLessonRate: z.coerce.number().min(0, "Trial rate cannot be negative").max(200, "Maximum rate is $200").optional(),
+  timezone: z.string().optional(),
+  experience: z.string().max(500, "Experience description too long").optional(),
+  education: z.string().max(500, "Education description too long").optional(),
+})
+
+// Schema per StudentProfile
+export const studentProfileSchema = z.object({
+  nativeLanguage: z.string().min(1, "Native language is required"),
+  learningLanguages: z.array(z.string()).min(1, "Select at least one language to learn"),
+  currentLevel: z.enum(LEVELS, { required_error: "Please select your current level" }),
+  learningGoals: z.array(z.string()).min(1, "Select at least one learning goal"),
+  timezone: z.string().optional(),
+  preferredSchedule: z.string().max(200, "Preferred schedule too long").optional(),
+})
+
+export type TeacherProfileFormData = z.infer<typeof teacherProfileSchema>
+export type StudentProfileFormData = z.infer<typeof studentProfileSchema>
