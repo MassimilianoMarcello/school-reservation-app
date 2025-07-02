@@ -12,8 +12,11 @@ export default async function Page() {
   if (!session) return <div>Not authenticated</div>;
 
   // ⛏️ Prendi i dati freschi dal DB usando l'email della sessione
+  const email = session.user.email;
+  if (!email) return <div>User email not found</div>;
+
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { email },
   });
 
   if (!user) return <div>User not found</div>;
